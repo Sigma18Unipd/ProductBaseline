@@ -11,11 +11,13 @@ import {
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { RainbowButton } from '@/components/magicui/rainbow-button';
 import axios from 'axios';
 import type { Edge, Node } from '@xyflow/react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
+import { PencilIcon } from "lucide-react"
 
 export function TopContainer(
   props: { 
@@ -28,11 +30,59 @@ export function TopContainer(
   const { id } = useParams();
   const navigate = useNavigate();
   const [promptValue, setPromptValue] = useState('');
+  const [newName, setNewName] = useState('');
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openAiRoutineDialog, setOpenAiRoutineDialog] = useState(false);
+  const [openChangeNameDialog, setOpenChangeNameDialog] = useState(false);
   return (
     <div className='flex items-center place-content-between' style={{ margin: '0 24px', gridArea: 'topContainer' }}>
-      <div><Button onClick= { ()=> { navigate("/dashboard") }}>Back to Dashboard</Button><span style={{ marginLeft: 20 }}>{props.name}</span></div>
+      <div>
+        <Button onClick= { ()=> { navigate("/dashboard") }}>Back to Dashboard</Button>
+        <span style={{ marginLeft: 20 }}>{props.name}</span>
+
+
+
+
+    <Dialog open={openChangeNameDialog} onOpenChange={setOpenChangeNameDialog}>
+      <DialogTrigger asChild>
+        <Button style={{ marginLeft: 5 }}  variant="ghost" size="icon">
+          <PencilIcon className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className='sm:max-w-[500px]'>
+            <DialogHeader>
+              <DialogTitle>Edit Routine Name</DialogTitle>
+            </DialogHeader>
+            <div className='grid gap-4'>
+              <div className='grid gap-2'>
+                <Label htmlFor='name-1'>Insert a new name</Label>
+                <Input type='text' onChange={(e) => setNewName(e.target.value)} placeholder='New name here' />
+              </div>
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant='outline'>Cancel</Button>
+              </DialogClose>
+              <Button
+                onClick={async () => {
+                  axios.post('http://localhost:5000/api/flows/${id}/editName', { 'newName': newName }, { withCredentials: true }).then(res => {
+                    console.log(res.data);
+                  }).finally(() => {
+                    console.log("Name changed");
+                    setOpenChangeNameDialog(false);
+                  })}}>
+                Edit Name
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+
+
+
+
+
+      </div>
       <div className='flex gap-4'>
         <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
           <DialogTrigger asChild>
