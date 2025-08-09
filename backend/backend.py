@@ -33,7 +33,7 @@ def login():
     id = str(uuid.uuid4()) + email
     session[id] = email
     return jsonify({"authToken": id}), 200
-  return jsonify({"error": "login error"}), 401
+  return jsonify({"error": "login error"}), 40
 
 
 
