@@ -1,0 +1,22 @@
+services: 
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: prod
+    ports:
+      - "5173:5173"
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+      target: prod
+    ports:
+      - "3000:3000"
+    #env_file:
+    #  - ./backend/.backend.env
+  mongo:
+    image: mongo:latest
+    restart: always
+    ports:
+      - "27017:27017"
