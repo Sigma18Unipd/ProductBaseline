@@ -1,23 +1,22 @@
 from flask import Flask, make_response, redirect, request, jsonify
 from flask_cors import CORS, cross_origin
 import boto3
-import jwt
-import datetime
-import hmac
-import hashlib
-import base64
+#import jwt
+#import datetime
+#import hmac
+#import hashlib
+#import base64
 from utils.jwtUtils import generate_jwt, verify_jwt
-
-
-
+from dotenv import load_dotenv
+import os
 
 
 # ---------- AWS, Cognito, Flask setup ----------
-COGNITO_APP_CLIENT_ID = "71h9cip98bd95h87rvkqj8jmer"
+load_dotenv()
 AWS_REGION = "eu-west-1"
-AWS_ACCESS_KEY_ID = "ASIAYLERNPBSDLBV6Z2X"
-AWS_SECRET_ACCESS_KEY = "DzPT8OXNtKqUWEVHEDvJH9+MxTqKiyCtwjM0QbSf"
-
+COGNITO_APP_CLIENT_ID = os.environ.get("COGNITO_APP_CLIENT_ID")
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
 try:
 	client = boto3.client(
 		'cognito-idp', 
@@ -25,15 +24,14 @@ try:
 		aws_access_key_id=AWS_ACCESS_KEY_ID,
 		aws_secret_access_key=AWS_SECRET_ACCESS_KEY
 	)
-	print("AWS client configurato correttamente")
+	#print("AWS client configurato correttamente")
 except Exception as e:
 	print(f"Errore configurazione AWS: {e}")
 
 app = Flask(__name__)
 cors = CORS(app, supports_credentials=True, origins='*')
 app.config['CORS_HEADERS'] = 'Content-Type'
-
- 
+app.config['MONGO_URI'] = os.environ.get("MONGO_URI", "mongodb://localhost:27017/mydb")
  
  
 
