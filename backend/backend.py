@@ -33,7 +33,7 @@ except Exception as e:
 app = Flask(__name__)
 cors = CORS(app, supports_credentials=True, origins='*')
 app.config['CORS_HEADERS'] = 'Content-Type'
-app.config['MONGO_URI'] = os.environ.get("MONGO_URI", "mongodb://localhost:27017/mydb")
+app.config['MONGO_URI'] = os.environ.get("MONGO_URI", "mongodb://mongo:27017/mydb")
 init_db(app)
  
 
