@@ -35,7 +35,6 @@ cors = CORS(app, supports_credentials=True, origins='*')
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['MONGO_URI'] = os.environ.get("MONGO_URI", "mongodb://mongo:27017/mydb")
 init_db(app)
- 
 
 # ---------- Auth Routes ----------
 @app.route('/login', methods=['POST'])
@@ -144,6 +143,38 @@ def get_workflows():
 	]
 	print (f"Flows for {g.email}: {flows}")
 	return jsonify(flows), 200
+
+
+### TODO TODO TODO TODO !! 
+# NON TESTATI!
+@app.route('/api/flows/<id>', methods=['POST'])
+@protected
+def get_workflow(id):
+	flow = db.workflows.find_one({"_id": id, "email": g.email})
+	if not flow:
+		return jsonify({"error": "Workflow not found"}), 404
+	return jsonify({
+		"id": str(flow["_id"]),
+		"name": flow["name"],
+		"contents": flow["contents"],
+	}), 200
+
+@app.route('/api/flows/<id>/save', methods=['POST'])
+@protected
+def save_workflow(id):
+	data = request.get_json()
+	flow = db.workflows.find_one({"_id": id, "email": g.email})
+	if not flow:
+		return jsonify({"error": "Workflow not found"}), 404
+	try:
+		db.workflows.update_one(
+			{"_id": id, "email": g.email},
+			{"$set": {"contents": data["contents"]}}
+		)
+		return jsonify({"message": "Workflow saved successfully"}), 200
+	except Exception as e:
+		print(f"Error saving workflow: {e}")
+		return jsonify({"error": str(e)}), 500
 
 # ---------- RUN ----------
 if __name__ == '__main__':
