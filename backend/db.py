@@ -9,6 +9,7 @@ from bson.objectid import ObjectId
 from bson.errors import InvalidId
 # https://www.mongodb.com/resources/products/compatibilities/setting-up-flask-with-mongodb
 
+mongo = PyMongo()
 def get_db(): # singleton
     """
     Configuration method to return db instance
@@ -17,8 +18,11 @@ def get_db(): # singleton
 
     if db is None:
 
-        db = g._database = PyMongo(current_app).db
+        db = g._database = mongo.db
        
     return db
+
+def init_db(app):
+    mongo.init_app(app)
 
 db = LocalProxy(get_db)

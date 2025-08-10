@@ -10,7 +10,7 @@ from utils.jwtUtils import generate_jwt, verify_jwt
 from dotenv import load_dotenv
 import os
 from functools import wraps
-from db import db
+from db import db, init_db
 
 
 # ---------- AWS, Cognito, Flask setup ----------
@@ -34,7 +34,7 @@ app = Flask(__name__)
 cors = CORS(app, supports_credentials=True, origins='*')
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['MONGO_URI'] = os.environ.get("MONGO_URI", "mongodb://localhost:27017/mydb")
- 
+init_db(app)
  
 
 # ---------- Auth Routes ----------
