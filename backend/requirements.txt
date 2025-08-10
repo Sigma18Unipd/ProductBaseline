@@ -5,5 +5,4 @@ PyJWT
 Flask
 pymongo
 Flask-PyMongo
-bson
 python-dotenv
