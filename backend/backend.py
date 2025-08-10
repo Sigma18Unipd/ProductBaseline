@@ -1,4 +1,4 @@
-from flask import Flask, make_response, redirect, request, jsonify
+from flask import Flask, make_response, redirect, request, jsonify, g
 from flask_cors import CORS, cross_origin
 import boto3
 #import jwt
@@ -10,6 +10,7 @@ from utils.jwtUtils import generate_jwt, verify_jwt
 from dotenv import load_dotenv
 import os
 from functools import wraps
+from db import db
 
 
 # ---------- AWS, Cognito, Flask setup ----------
@@ -114,27 +115,35 @@ def confirm():
 
 # ---------- Protected Routes ----------
 def protected(f):
-  @wraps(f)
-  def decorated_function(*args, **kwargs):
-    jwt_token = request.cookies.get('jwtToken')
-    if not jwt_token or not verify_jwt(jwt_token):
-      return redirect("/login"), 302
-    return f(*args, **kwargs)
-  return decorated_function
+	@wraps(f)
+	def decorated_function(*args, **kwargs):
+		jwt_token = request.cookies.get('jwtToken')
+		payload = verify_jwt(jwt_token)
+		if not jwt_token or not payload:
+			return redirect("/login"), 302
+		g.email = payload['email']
+		return f(*args, **kwargs)
+	return decorated_function
 
 
 @app.route('/dashboard', methods=['POST'])
 @protected
 def dashboard():
-	jwtToken = request.cookies.get('jwtToken')
-	decodedJwt = verify_jwt(jwtToken)
-	if decodedJwt:
-		return jsonify({"email": decodedJwt['email']}), 200
-	return redirect("/login"), 302
+	return jsonify({"email": g.email}), 200
  
-
-
-
+@app.route('/api/flows', methods=['POST'])
+@protected
+def get_workflows():
+	cursor = db.workflows.find({"email": g.email})
+	flows = [
+		{
+			"id": str(flow["_id"]),
+			"name": flow["name"],
+			"contents": flow["contents"],
+		} for flow in cursor
+	]
+	print (f"Flows for {g.email}: {flows}")
+	return jsonify(flows), 200
 
 # ---------- RUN ----------
 if __name__ == '__main__':
