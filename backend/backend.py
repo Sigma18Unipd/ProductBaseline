@@ -9,6 +9,7 @@ import boto3
 from utils.jwtUtils import generate_jwt, verify_jwt
 from dotenv import load_dotenv
 import os
+from functools import wraps
 
 
 # ---------- AWS, Cognito, Flask setup ----------
@@ -112,16 +113,24 @@ def confirm():
 
 
 # ---------- Protected Routes ----------
+def protected(f):
+  @wraps(f)
+  def decorated_function(*args, **kwargs):
+    jwt_token = request.cookies.get('jwtToken')
+    if not jwt_token or not verify_jwt(jwt_token):
+      return redirect("/login"), 302
+    return f(*args, **kwargs)
+  return decorated_function
+
+
 @app.route('/dashboard', methods=['POST'])
+@protected
 def dashboard():
 	jwtToken = request.cookies.get('jwtToken')
-	if not jwtToken:
-		return redirect("/login"), 302
 	decodedJwt = verify_jwt(jwtToken)
 	if decodedJwt:
 		return jsonify({"email": decodedJwt['email']}), 200
-	else:
-		return redirect("/login"), 302
+	return redirect("/login"), 302
  
 
 
