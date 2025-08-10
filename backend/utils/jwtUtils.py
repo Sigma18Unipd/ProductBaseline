@@ -1,7 +1,8 @@
 import jwt
 import datetime
+import os
 
-JWT_SECRET = "your_secret_key"
+JWT_SECRET = os.environ.get("JWT_SECRET", "your_secret_key")
 
 def generate_jwt(email):
   payload = {
