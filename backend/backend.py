@@ -1,32 +1,33 @@
 from flask import Flask, make_response, redirect, request, jsonify, g
 from flask_cors import CORS, cross_origin
 import boto3
+from utils.jwtUtils import generateJwt, verifyJwt
+from dotenv import load_dotenv
+import os
+from functools import wraps
+from db import db, init_db
 #import jwt
 #import datetime
 #import hmac
 #import hashlib
 #import base64
-from utils.jwtUtils import generate_jwt, verify_jwt
-from dotenv import load_dotenv
-import os
-from functools import wraps
-from db import db, init_db
+
+
+
+
 
 
 # ---------- AWS, Cognito, Flask setup ----------
 load_dotenv()
 AWS_REGION = "eu-west-1"
 COGNITO_APP_CLIENT_ID = os.environ.get("COGNITO_APP_CLIENT_ID")
-AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
 try:
 	client = boto3.client(
 		'cognito-idp', 
 		region_name=AWS_REGION, 
-		aws_access_key_id=AWS_ACCESS_KEY_ID,
-		aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+		aws_access_key_id= os.environ.get("AWS_ACCESS_KEY_ID"),
+		aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY")
 	)
-	#print("AWS client configurato correttamente")
 except Exception as e:
 	print(f"Errore configurazione AWS: {e}")
 
@@ -35,6 +36,10 @@ cors = CORS(app, supports_credentials=True, origins='*')
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['MONGO_URI'] = os.environ.get("MONGO_URI", "mongodb://mongo:27017/mydb")
 init_db(app)
+
+
+
+
 
 # ---------- Auth Routes ----------
 @app.route('/login', methods=['POST'])
@@ -49,7 +54,7 @@ def login():
 			},
 			ClientId=COGNITO_APP_CLIENT_ID
 		)
-		jwtToken = generate_jwt(data['email'])
+		jwtToken = generateJwt(data['email'])
 		response = make_response()
 		response.set_cookie(
 			'jwtToken',
@@ -112,27 +117,24 @@ def confirm():
 
 
 
-# ---------- Protected Routes ----------
 def protected(f):
 	@wraps(f)
 	def decorated_function(*args, **kwargs):
-		jwt_token = request.cookies.get('jwtToken')
-		payload = verify_jwt(jwt_token)
-		if not jwt_token or not payload:
+		try:
+			jwtToken = request.cookies.get('jwtToken')
+			payload = verifyJwt(jwtToken)
+			if not jwtToken or not payload:
+				return redirect("/login"), 302
+			g.email = payload['email']
+			return f(*args, **kwargs)
+		except Exception as e:
 			return redirect("/login"), 302
-		g.email = payload['email']
-		return f(*args, **kwargs)
 	return decorated_function
 
-
+# ---------- Protected Routes ----------
 @app.route('/dashboard', methods=['POST'])
 @protected
 def dashboard():
-	return jsonify({"email": g.email}), 200
- 
-@app.route('/api/flows', methods=['POST'])
-@protected
-def get_workflows():
 	cursor = db.workflows.find({"email": g.email})
 	flows = [
 		{
@@ -141,8 +143,24 @@ def get_workflows():
 			"contents": flow["contents"],
 		} for flow in cursor
 	]
-	print (f"Flows for {g.email}: {flows}")
-	return jsonify(flows), 200
+	return jsonify({"email": g.email, "flows": flows}), 200
+
+@app.route('/logout', methods=['POST'])
+@protected
+def logout():
+	response = make_response()
+	response.set_cookie(
+		'jwtToken',
+		'',
+		max_age=0,
+		httponly=True,
+		secure=False,  # False for localhost, change to True for production in HTTPS
+		samesite='Lax'
+	)
+	return response, 200
+
+
+
 
 
 ### TODO TODO TODO TODO !! 
@@ -175,6 +193,10 @@ def save_workflow(id):
 	except Exception as e:
 		print(f"Error saving workflow: {e}")
 		return jsonify({"error": str(e)}), 500
+
+
+
+
 
 # ---------- RUN ----------
 if __name__ == '__main__':
