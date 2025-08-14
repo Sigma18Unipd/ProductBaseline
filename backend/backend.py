@@ -1,11 +1,12 @@
 from flask import Flask, make_response, redirect, request, jsonify, g
 from flask_cors import CORS, cross_origin
 import boto3
+from FlaskAppSingleton import FlaskAppSingleton
+from MongoDBSingleton import MongoDBSingleton
 from utils.jwtUtils import generateJwt, verifyJwt
 from dotenv import load_dotenv
 import os
 from functools import wraps
-from db import db, init_db
 #import jwt
 #import datetime
 #import hmac
@@ -16,8 +17,7 @@ from db import db, init_db
 
 
 
-
-# ---------- AWS, Cognito, Flask setup ----------
+# ---------- AWS, Cognito, Flask, DB setup ----------
 load_dotenv()
 AWS_REGION = "eu-west-1"
 COGNITO_APP_CLIENT_ID = os.environ.get("COGNITO_APP_CLIENT_ID")
@@ -31,11 +31,15 @@ try:
 except Exception as e:
 	print(f"Errore configurazione AWS: {e}")
 
-app = Flask(__name__)
+flask_singleton = FlaskAppSingleton()
+app = flask_singleton.get_app()
+
+mongo_singleton = MongoDBSingleton(app)
+db = mongo_singleton.get_db()
+
 cors = CORS(app, supports_credentials=True, origins='*')
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['MONGO_URI'] = os.environ.get("MONGO_URI", "mongodb://mongo:27017/mydb")
-init_db(app)
 
 
 
@@ -154,7 +158,7 @@ def logout():
 		'',
 		max_age=0,
 		httponly=True,
-		secure=False,  # False for localhost, change to True for production in HTTPS
+		secure=False,  # False for localhost, change to True for production in HTTPS #TODO
 		samesite='Lax'
 	)
 	return response, 200
