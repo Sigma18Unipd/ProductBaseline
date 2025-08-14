@@ -118,6 +118,7 @@ def confirm():
 		return jsonify({"error": str(e)}), 401
 
 
+
 def protected(f):
 	@wraps(f)
 	def decorated_function(*args, **kwargs):
@@ -131,7 +132,6 @@ def protected(f):
 			return redirect("/login"), 302
 		return f(*args, **kwargs)
 	return decorated_function
-
 
 # ---------- Protected Routes ----------
 @app.route('/dashboard', methods=['POST'])
@@ -147,7 +147,6 @@ def dashboard():
 	]
 	return jsonify({"email": g.email, "flows": flows}), 200
 
-
 @app.route('/logout', methods=['POST'])
 @protected
 def logout():
@@ -161,7 +160,6 @@ def logout():
 		samesite='Lax'
 	)
 	return response, 200
-
 
 @app.route('/api/new', methods=['POST'])
 @protected
@@ -183,7 +181,6 @@ def new_workflow():
 	except Exception as e:
 		return jsonify({"error": str(e)}), 401
 
-
 @app.route('/api/flows/<id>', methods=['POST'])
 @protected
 def get_workflow(id):
@@ -196,7 +193,6 @@ def get_workflow(id):
 		"contents": json.dumps(flow["contents"]),
 	}), 200
 
-	
 @app.route('/api/flows/<id>/save', methods=['POST'])
 @protected
 def save_workflow(id):
@@ -214,9 +210,6 @@ def save_workflow(id):
 		print(f"Error saving workflow: {e}")
 		return jsonify({"error": str(e)}), 500
 
-
-
-
 @app.route('/api/flows/<id>/run', methods=['POST'])
 @protected
 def run_workflow(id):
@@ -231,7 +224,6 @@ def run_workflow(id):
 		print(f"Error running workflow: {e}")
 		return jsonify({"error": str(e)}), 500
 
-
 @cross_origin
 @app.route('/api/prompt', methods=['POST'])
 def ai_flow():
@@ -245,6 +237,9 @@ def ai_flow():
   except Exception as e:
     print(f"Error processing prompt: {e}")
     return jsonify({"error": str(e)}), 500
+
+
+
 
 
 # ---------- RUN ----------
