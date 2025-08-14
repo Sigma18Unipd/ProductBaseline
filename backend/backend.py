@@ -1,13 +1,14 @@
 import uuid
-from flask import Flask, make_response, redirect, request, jsonify, g
+from flask import Flask, json, make_response, redirect, request, jsonify, g
 from flask_cors import CORS, cross_origin
 import boto3
-from FlaskAppSingleton import FlaskAppSingleton
-from MongoDBSingleton import MongoDBSingleton
+from flaskAppSingleton import FlaskAppSingleton
+from mongodbSingleton import MongoDBSingleton
 from utils.jwtUtils import generateJwt, verifyJwt
 from dotenv import load_dotenv
 import os
 from functools import wraps
+from llm.llmSanitizer import process_prompt
 #import jwt
 #import datetime
 #import hmac
@@ -131,6 +132,7 @@ def protected(f):
 		return f(*args, **kwargs)
 	return decorated_function
 
+
 # ---------- Protected Routes ----------
 @app.route('/dashboard', methods=['POST'])
 @protected
@@ -145,6 +147,7 @@ def dashboard():
 	]
 	return jsonify({"email": g.email, "flows": flows}), 200
 
+
 @app.route('/logout', methods=['POST'])
 @protected
 def logout():
@@ -158,6 +161,7 @@ def logout():
 		samesite='Lax'
 	)
 	return response, 200
+
 
 @app.route('/api/new', methods=['POST'])
 @protected
@@ -179,6 +183,7 @@ def new_workflow():
 	except Exception as e:
 		return jsonify({"error": str(e)}), 401
 
+
 @app.route('/api/flows/<id>', methods=['POST'])
 @protected
 def get_workflow(id):
@@ -188,29 +193,9 @@ def get_workflow(id):
 	return jsonify({
 		"id": str(flow["_id"]),
 		"name": flow["name"],
-		"contents": flow["contents"],
+		"contents": json.dumps(flow["contents"]),
 	}), 200
-	
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-	# OLD CODE
-	#flow = db.fetchone("SELECT * FROM workflows WHERE id = ?", (id, ))
-	#if not flow or flow[1] != clientEmail:
-	#  return jsonify({"error": "Workflow not found or does not belong to the client"}), 404
-	#flow = dict(zip(['id', 'clientEmail', 'name', 'contents'], flow))
-	
+
 	
 @app.route('/api/flows/<id>/save', methods=['POST'])
 @protected
@@ -244,52 +229,34 @@ def delete_workflow(id):
 		return jsonify({"error": str(e)}), 500
 
 
-#@app.route('/api/flows/<id>/run', methods=['POST'])
-#@protected
-#def run_workflow(id):
-#	flow = db.workflows.find_one({"_id": id, "email": g.email})
-#	if not flow:
-#		return jsonify({"error": "Workflow not found"}), 404
-#	contents = flow.get("contents", {})
-#	try:
-#		#return runner.run(contents)
-#		return jsonify({"message": "Not implemented :)", "contents": contents}), 200
-#	except Exception as e:
-#		print(f"Error running workflow: {e}")
-#		return jsonify({"error": str(e)}), 500
-#
-#@app.route('/api/prompt', methods=['POST'])
-#@protected
-#def ai_flow():
-#	data = request.get_json()
-#	prompt = data.get('prompt', '')
-#	if not prompt:
-#		return jsonify({"error": "Prompt is required"}), 400
-#	try:
-#		response = ""
-#		#response = process_prompt(prompt) :)))
-#		return jsonify(response), 200
-#	except Exception as e:
-#		print(f"Error processing prompt: {e}")
-#		return jsonify({"error": str(e)}), 500
-#
-#### TODO TODO TODO TODO !! 
-## NON TESTATI!
-#
-#
-#@cross_origin
-#@app.route('/api/prompt', methods=['POST'])
-#def ai_flow():
-#  data = request.get_json()
-#  prompt = data.get('prompt', '')
-#  if not prompt:
-#    return jsonify({"error": "Prompt is required"}), 400
-#  try:
-#    response = process_prompt(prompt)
-#    return jsonify(response), 200
-#  except Exception as e:
-#    print(f"Error processing prompt: {e}")
-#    return jsonify({"error": str(e)}), 500
+@app.route('/api/flows/<id>/run', methods=['POST'])
+@protected
+def run_workflow(id):
+	flow = db.workflows.find_one({"_id": id, "email": g.email})
+	if not flow:
+		return jsonify({"error": "Workflow not found"}), 404
+	contents = flow.get("contents", {})
+	try:
+		#return runner.run(contents)
+		return jsonify({"message": "Not implemented :)", "contents": contents}), 200
+	except Exception as e:
+		print(f"Error running workflow: {e}")
+		return jsonify({"error": str(e)}), 500
+
+
+@cross_origin
+@app.route('/api/prompt', methods=['POST'])
+def ai_flow():
+  data = request.get_json()
+  prompt = data.get('prompt', '')
+  if not prompt:
+    return jsonify({"error": "Prompt is required"}), 400
+  try:
+    response = process_prompt(prompt)
+    return jsonify(response), 200
+  except Exception as e:
+    print(f"Error processing prompt: {e}")
+    return jsonify({"error": str(e)}), 500
 
 
 # ---------- RUN ----------

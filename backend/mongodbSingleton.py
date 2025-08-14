@@ -1,7 +1,4 @@
-import os
 from flask_pymongo import PyMongo
-from flask import Flask
-import bson
 from flask import current_app, g
 from werkzeug.local import LocalProxy
 from pymongo.errors import DuplicateKeyError, OperationFailure
@@ -13,6 +10,7 @@ from bson.errors import InvalidId
 
 class MongoDBSingleton:
     _instance = None
+    mongo = None
 
     def __new__(cls, app=None):
         if cls._instance is None:
