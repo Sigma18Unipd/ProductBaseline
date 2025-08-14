@@ -200,7 +200,7 @@ def new_workflow():
   data = request.get_json()
   name = data.get('name', '')
   if not name:
-    return jsonify({"error": "Routine name is required"}), 400
+    return jsonify({"error": "Workflow name is required"}), 400
   if not clientEmail:
     return jsonify({"error": "Unauthorized"}), 401
   new_id = str(uuid.uuid4())

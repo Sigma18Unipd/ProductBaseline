@@ -45,12 +45,26 @@ function onSubmit(values: z.infer<typeof formSchema>) {
   axios.post('http://localhost:5000/register', values).then((response) => {
     if (response.status === 200) {
       localStorage.setItem('email', values.email);
+      localStorage.setItem('nextPageAlert', 'Your account has been created successfully. Please check your email to confirm your account.');
       window.location.href = '/confirm';
     }
   }).catch((error) => {
     toast.error(error.response?.data?.error || "An error occurred during registration");
   })
 }
+
+
+
+document.addEventListener("readystatechange", () => {
+  if (document.readyState === "complete") {
+    setTimeout(() => {
+      if (localStorage.getItem("nextPageAlert")) {
+        toast.error(localStorage.getItem("nextPageAlert"));
+        localStorage.removeItem("nextPageAlert");
+      }
+    }, 1000);
+  }
+});
 
 
 

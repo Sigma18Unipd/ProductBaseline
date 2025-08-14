@@ -20,11 +20,11 @@ function DefaultErrorPage() {
 const router = createBrowserRouter([
   {
     path: "/",
-    errorElement: <DefaultErrorPage />, // Global error page
+    errorElement: <DefaultErrorPage />,
     children: [
       {
         index: true,
-        loader: () => redirect("/login"), // Redirect root to login
+        loader: () => redirect("/login"),
       },
       {
         path: "login",

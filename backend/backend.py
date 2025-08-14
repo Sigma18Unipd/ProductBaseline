@@ -1,3 +1,4 @@
+import uuid
 from flask import Flask, make_response, redirect, request, jsonify, g
 from flask_cors import CORS, cross_origin
 import boto3
@@ -116,9 +117,6 @@ def confirm():
 		return jsonify({"error": str(e)}), 401
 
 
-
-
-
 def protected(f):
 	@wraps(f)
 	def decorated_function(*args, **kwargs):
@@ -128,9 +126,9 @@ def protected(f):
 			if not jwtToken or not payload:
 				return redirect("/login"), 302
 			g.email = payload['email']
-			return f(*args, **kwargs)
 		except Exception as e:
 			return redirect("/login"), 302
+		return f(*args, **kwargs)
 	return decorated_function
 
 # ---------- Protected Routes ----------
@@ -161,12 +159,26 @@ def logout():
 	)
 	return response, 200
 
+@app.route('/api/new', methods=['POST'])
+@protected
+def new_workflow():
+	clientEmail = g.email
+	data = request.get_json()
+	name = data.get('name')
+	if not name:
+		return jsonify({"error": "Workflow name is required"}), 401
+	new_id = str(uuid.uuid4())
+	try:
+		db.workflows.insert_one({
+			"_id": new_id,
+			"email": clientEmail,
+			"name": name,
+			"contents": {}
+		})
+		return jsonify({"id": new_id}), 200
+	except Exception as e:
+		return jsonify({"error": str(e)}), 401
 
-
-
-
-### TODO TODO TODO TODO !! 
-# NON TESTATI!
 @app.route('/api/flows/<id>', methods=['POST'])
 @protected
 def get_workflow(id):
@@ -178,7 +190,28 @@ def get_workflow(id):
 		"name": flow["name"],
 		"contents": flow["contents"],
 	}), 200
-
+	
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+	# OLD CODE
+	#flow = db.fetchone("SELECT * FROM workflows WHERE id = ?", (id, ))
+	#if not flow or flow[1] != clientEmail:
+	#  return jsonify({"error": "Workflow not found or does not belong to the client"}), 404
+	#flow = dict(zip(['id', 'clientEmail', 'name', 'contents'], flow))
+	
+	
 @app.route('/api/flows/<id>/save', methods=['POST'])
 @protected
 def save_workflow(id):
@@ -197,7 +230,66 @@ def save_workflow(id):
 		return jsonify({"error": str(e)}), 500
 
 
+@app.route('/api/flows/<id>/delete', methods=['DELETE'])
+@protected
+def delete_workflow(id):
+	flow = db.workflows.find_one({"_id": id, "email": g.email})
+	if not flow:
+		return jsonify({"error": "Workflow not found"}), 404
+	try:
+		db.workflows.delete_one({"_id": id, "email": g.email})
+		return jsonify({"message": "Workflow deleted successfully"}), 200
+	except Exception as e:
+		print(f"Error deleting workflow: {e}")
+		return jsonify({"error": str(e)}), 500
 
+
+#@app.route('/api/flows/<id>/run', methods=['POST'])
+#@protected
+#def run_workflow(id):
+#	flow = db.workflows.find_one({"_id": id, "email": g.email})
+#	if not flow:
+#		return jsonify({"error": "Workflow not found"}), 404
+#	contents = flow.get("contents", {})
+#	try:
+#		#return runner.run(contents)
+#		return jsonify({"message": "Not implemented :)", "contents": contents}), 200
+#	except Exception as e:
+#		print(f"Error running workflow: {e}")
+#		return jsonify({"error": str(e)}), 500
+#
+#@app.route('/api/prompt', methods=['POST'])
+#@protected
+#def ai_flow():
+#	data = request.get_json()
+#	prompt = data.get('prompt', '')
+#	if not prompt:
+#		return jsonify({"error": "Prompt is required"}), 400
+#	try:
+#		response = ""
+#		#response = process_prompt(prompt) :)))
+#		return jsonify(response), 200
+#	except Exception as e:
+#		print(f"Error processing prompt: {e}")
+#		return jsonify({"error": str(e)}), 500
+#
+#### TODO TODO TODO TODO !! 
+## NON TESTATI!
+#
+#
+#@cross_origin
+#@app.route('/api/prompt', methods=['POST'])
+#def ai_flow():
+#  data = request.get_json()
+#  prompt = data.get('prompt', '')
+#  if not prompt:
+#    return jsonify({"error": "Prompt is required"}), 400
+#  try:
+#    response = process_prompt(prompt)
+#    return jsonify(response), 200
+#  except Exception as e:
+#    print(f"Error processing prompt: {e}")
+#    return jsonify({"error": str(e)}), 500
 
 
 # ---------- RUN ----------

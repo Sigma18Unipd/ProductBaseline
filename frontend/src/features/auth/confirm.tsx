@@ -46,12 +46,26 @@ function onSubmit(values: z.infer<typeof formSchema>) {
   axios.post('http://localhost:5000/confirm', values).then((response) => {
     if (response.status === 200) {
       localStorage.clear();
+      localStorage.setItem('nextPageAlert', 'Your account has been confirmed successfully. You can now login.');
       window.location.href = '/login';
     }
   }).catch((error) => {
     toast.error(error.response?.data?.error || "An error occurred during confirmation");
   })
 }
+
+
+
+document.addEventListener("readystatechange", () => {
+  if (document.readyState === "complete") {
+    setTimeout(() => {
+      if (localStorage.getItem("nextPageAlert")) {
+        toast.error(localStorage.getItem("nextPageAlert"));
+        localStorage.removeItem("nextPageAlert");
+      }
+    }, 1000);
+  }
+});
 
 
 

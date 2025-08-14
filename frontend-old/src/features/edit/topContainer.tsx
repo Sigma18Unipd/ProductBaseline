@@ -32,7 +32,7 @@ export function TopContainer(
   const [promptValue, setPromptValue] = useState('');
   const [newName, setNewName] = useState('');
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [openAiRoutineDialog, setOpenAiRoutineDialog] = useState(false);
+  const [openAiWorkflowDialog, setOpenAiWorkflowDialog] = useState(false);
   const [openChangeNameDialog, setOpenChangeNameDialog] = useState(false);
   return (
     <div className='flex items-center place-content-between' style={{ margin: '0 24px', gridArea: 'topContainer' }}>
@@ -51,7 +51,7 @@ export function TopContainer(
       </DialogTrigger>
       <DialogContent className='sm:max-w-[500px]'>
             <DialogHeader>
-              <DialogTitle>Edit Routine Name</DialogTitle>
+              <DialogTitle>Edit Workflow Name</DialogTitle>
             </DialogHeader>
             <div className='grid gap-4'>
               <div className='grid gap-2'>
@@ -116,19 +116,19 @@ export function TopContainer(
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        <Dialog open={openAiRoutineDialog} onOpenChange={setOpenAiRoutineDialog}>
+        <Dialog open={openAiWorkflowDialog} onOpenChange={setOpenAiWorkflowDialog}>
           <DialogTrigger asChild>
-            <RainbowButton>AI Routine Builder</RainbowButton>
+            <RainbowButton>AI Workflow Builder</RainbowButton>
           </DialogTrigger>
           <DialogContent className='sm:max-w-[500px]'>
             <DialogHeader>
-              <DialogTitle>AI Routine Builder</DialogTitle>
+              <DialogTitle>AI Workflow Builder</DialogTitle>
               <DialogDescription>From words to workflows, powered by AI.</DialogDescription>
             </DialogHeader>
             <div className='grid gap-4'>
               <div className='grid gap-2'>
                 <Label htmlFor='name-1'>Prompt</Label>
-                <Textarea onChange={(e) => setPromptValue(e.target.value)} placeholder='Describe your routine here' className='resize-none' />
+                <Textarea onChange={(e) => setPromptValue(e.target.value)} placeholder='Describe your workflow here' className='resize-none' />
               </div>
             </div>
             <DialogFooter>
@@ -144,7 +144,7 @@ export function TopContainer(
                     props.setEdges(res.data.edges);
                   }).finally(() => {
                     console.log("Workflow generated");
-                    setOpenAiRoutineDialog(false);
+                    setOpenAiWorkflowDialog(false);
                   })}}>
                 Generate Workflow
               </RainbowButton>

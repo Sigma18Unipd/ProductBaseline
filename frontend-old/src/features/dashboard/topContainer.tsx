@@ -16,43 +16,43 @@ function logout() {
 
 
 
-function createNewRoutine(newRoutineName: string) {
-  axios.post("http://localhost:5000/api/new", { 'name': newRoutineName }, { withCredentials: true }).then((res) => {
+function createNewWorkflow(newWorkflowName: string) {
+  axios.post("http://localhost:5000/api/new", { 'name': newWorkflowName }, { withCredentials: true }).then((res) => {
     if (res.status === 200 && res.data.id) {
       window.location.href = `/edit/${res.data.id}`;
     }
   }).catch((error) => {
-    console.error('Failed to create routine:', error);
+    console.error('Failed to create workflow:', error);
   });
 }
 
 
 
 export function TopContainer() {
-  const [newRoutineName, setNewRoutineName] = useState('');
+  const [newWorkflowName, setNewWorkflowName] = useState('');
   return (
     <div className='flex items-center place-content-between' style={{ margin: '0 24px', gridArea: 'topContainer' }}>
       <div>Sigma18 PoC v1.7.10 Pro Max</div>
       <div className='flex gap-4'>
         <Dialog>
           <DialogTrigger asChild>
-            <Button>Create a Routine</Button>
+            <Button>Create a Workflow</Button>
           </DialogTrigger>
           <DialogContent className='sm:max-w-[500px]'>
             <DialogHeader>
-              <DialogTitle>Create a new routine</DialogTitle>
+              <DialogTitle>Create a new workflow</DialogTitle>
             </DialogHeader>
             <div className='grid gap-4'>
               <div className='grid gap-2'>
                 <Label htmlFor='name-1'>Name</Label>
-                <Input onChange={(e) => setNewRoutineName(e.target.value)} type='text' placeholder='Enter the name of your routine' className='resize-none' />
+                <Input onChange={(e) => setNewWorkflowName(e.target.value)} type='text' placeholder='Enter the name of your workflow' className='resize-none' />
               </div>
             </div>
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant='outline'>Cancel</Button>
               </DialogClose>
-                <Button type='submit' onClick={() => createNewRoutine(newRoutineName)}>
+                <Button type='submit' onClick={() => createNewWorkflow(newWorkflowName)}>
                   Create
                 </Button>
             </DialogFooter>

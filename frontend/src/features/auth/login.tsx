@@ -47,6 +47,18 @@ function onSubmit(values: z.infer<typeof formSchema>) {
 
 
 
+document.addEventListener("readystatechange", () => {
+  if (document.readyState === "complete") {
+    setTimeout(() => {
+      if (localStorage.getItem("nextPageAlert")) {
+        toast.error(localStorage.getItem("nextPageAlert"));
+        localStorage.removeItem("nextPageAlert");
+      }
+    }, 1000);
+  }
+});
+
+
 export default function Login() {
   const navigate = useNavigate();
   const form = useForm<z.infer<typeof formSchema>>({
