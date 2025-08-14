@@ -6,6 +6,7 @@ services:
       target: dev
     volumes:
       - ./frontend:/usr/src
+      - /usr/src/node_modules
     ports:
       - "5173:5173"
   backend:
