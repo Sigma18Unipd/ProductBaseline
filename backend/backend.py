@@ -1,5 +1,5 @@
 import uuid
-from flask import Flask, json, make_response, redirect, request, jsonify, g
+from flask import json, make_response, redirect, request, jsonify, g
 from flask_cors import CORS, cross_origin
 import boto3
 from flaskAppSingleton import FlaskAppSingleton

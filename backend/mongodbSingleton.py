@@ -19,4 +19,4 @@ class MongoDBSingleton:
         return cls._instance
 
     def get_db(self):
-        return self.mongo.db
+        return self.mongo.db # pyright: ignore[reportAttributeAccessIssue]
