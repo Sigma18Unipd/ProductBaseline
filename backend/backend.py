@@ -1,13 +1,14 @@
 import uuid
-from flask import Flask, make_response, redirect, request, jsonify, g
+from flask import json, make_response, redirect, request, jsonify, g
 from flask_cors import CORS, cross_origin
 import boto3
-from FlaskAppSingleton import FlaskAppSingleton
-from MongoDBSingleton import MongoDBSingleton
+from flaskAppSingleton import FlaskAppSingleton
+from mongodbSingleton import MongoDBSingleton
 from utils.jwtUtils import generateJwt, verifyJwt
 from dotenv import load_dotenv
 import os
 from functools import wraps
+from llm.llmSanitizer import process_prompt
 #import jwt
 #import datetime
 #import hmac
@@ -131,6 +132,7 @@ def protected(f):
 		return f(*args, **kwargs)
 	return decorated_function
 
+
 # ---------- Protected Routes ----------
 @app.route('/dashboard', methods=['POST'])
 @protected
@@ -145,6 +147,7 @@ def dashboard():
 	]
 	return jsonify({"email": g.email, "flows": flows}), 200
 
+
 @app.route('/logout', methods=['POST'])
 @protected
 def logout():
@@ -158,6 +161,7 @@ def logout():
 		samesite='Lax'
 	)
 	return response, 200
+
 
 @app.route('/api/new', methods=['POST'])
 @protected
@@ -179,6 +183,7 @@ def new_workflow():
 	except Exception as e:
 		return jsonify({"error": str(e)}), 401
 
+
 @app.route('/api/flows/<id>', methods=['POST'])
 @protected
 def get_workflow(id):
@@ -188,33 +193,9 @@ def get_workflow(id):
 	return jsonify({
 		"id": str(flow["_id"]),
 		"name": flow["name"],
-		"contents": '{"nodes":[{"data":{"seconds":"3","title":"System - Wait (seconds)"},"id":"node-1","position":{"x":0,"y":0},"type":"systemWaitSeconds","measured":{"width":267,"height":78}},{"data":{"botToken":"7881088601:AAGWV8WQ5_dqYk6vRhpnoHFfDDRJ9A9JagQ","chatId":"-4976500325","message":"AAAAH"},"id":"node-2","position":{"x":365.28229165249184,"y":152.9319670169303},"type":"telegramSendBotMessage","measured":{"width":307,"height":78},"selected":false,"dragging":false},{"data":{"seconds":"5","title":"System - Wait (seconds)"},"id":"node-3","position":{"x":628.2431953008505,"y":-25.305289506398537},"type":"systemWaitSeconds","measured":{"width":267,"height":78},"selected":false,"dragging":false},{"data":{"botToken":"7881088601:AAGWV8WQ5_dqYk6vRhpnoHFfDDRJ9A9JagQ","chatId":"-4976500325","message":"GENERATETHIS"},"id":"node-4","position":{"x":921.7247207675637,"y":133.19699475376487},"type":"telegramSendBotMessage","measured":{"width":307,"height":78},"selected":true,"dragging":false}],"edges":[{"id":"edge-1","source":"node-1","target":"node-2"},{"id":"edge-2","source":"node-2","target":"node-3"},{"id":"edge-3","source":"node-3","target":"node-4"}]}'
+		"contents": json.dumps(flow["contents"]),
 	}), 200
-	
-@app.route('/api/flows/<id>/delete', methods=['DELETE'])
-@protected
-def delete_workflow(id):
-	flow = db.workflows.find_one({"_id": id, "email": g.email})
-	if not flow:
-		return jsonify({"error": "Workflow not found"}), 401
-	try:
-		db.workflows.delete_one({"_id": id, "email": g.email})
-		return jsonify({"message": "Workflow deleted successfully"}), 200
-	except Exception as e:
-		return jsonify({"error": str(e)}), 401
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
 	
 @app.route('/api/flows/<id>/save', methods=['POST'])
 @protected
@@ -236,52 +217,34 @@ def save_workflow(id):
 
 
 
-#@app.route('/api/flows/<id>/run', methods=['POST'])
-#@protected
-#def run_workflow(id):
-#	flow = db.workflows.find_one({"_id": id, "email": g.email})
-#	if not flow:
-#		return jsonify({"error": "Workflow not found"}), 404
-#	contents = flow.get("contents", {})
-#	try:
-#		#return runner.run(contents)
-#		return jsonify({"message": "Not implemented :)", "contents": contents}), 200
-#	except Exception as e:
-#		print(f"Error running workflow: {e}")
-#		return jsonify({"error": str(e)}), 500
-#
-#@app.route('/api/prompt', methods=['POST'])
-#@protected
-#def ai_flow():
-#	data = request.get_json()
-#	prompt = data.get('prompt', '')
-#	if not prompt:
-#		return jsonify({"error": "Prompt is required"}), 400
-#	try:
-#		response = ""
-#		#response = process_prompt(prompt) :)))
-#		return jsonify(response), 200
-#	except Exception as e:
-#		print(f"Error processing prompt: {e}")
-#		return jsonify({"error": str(e)}), 500
-#
-#### TODO TODO TODO TODO !! 
-## NON TESTATI!
-#
-#
-#@cross_origin
-#@app.route('/api/prompt', methods=['POST'])
-#def ai_flow():
-#  data = request.get_json()
-#  prompt = data.get('prompt', '')
-#  if not prompt:
-#    return jsonify({"error": "Prompt is required"}), 400
-#  try:
-#    response = process_prompt(prompt)
-#    return jsonify(response), 200
-#  except Exception as e:
-#    print(f"Error processing prompt: {e}")
-#    return jsonify({"error": str(e)}), 500
+@app.route('/api/flows/<id>/run', methods=['POST'])
+@protected
+def run_workflow(id):
+	flow = db.workflows.find_one({"_id": id, "email": g.email})
+	if not flow:
+		return jsonify({"error": "Workflow not found"}), 404
+	contents = flow.get("contents", {})
+	try:
+		#return runner.run(contents)
+		return jsonify({"message": "Not implemented :)", "contents": contents}), 200
+	except Exception as e:
+		print(f"Error running workflow: {e}")
+		return jsonify({"error": str(e)}), 500
+
+
+@cross_origin
+@app.route('/api/prompt', methods=['POST'])
+def ai_flow():
+  data = request.get_json()
+  prompt = data.get('prompt', '')
+  if not prompt:
+    return jsonify({"error": "Prompt is required"}), 400
+  try:
+    response = process_prompt(prompt)
+    return jsonify(response), 200
+  except Exception as e:
+    print(f"Error processing prompt: {e}")
+    return jsonify({"error": str(e)}), 500
 
 
 # ---------- RUN ----------
