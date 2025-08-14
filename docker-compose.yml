@@ -4,6 +4,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: dev
+    volumes:
+      - ./frontend:/usr/src
     ports:
       - "5173:5173"
   backend:
@@ -11,6 +13,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: dev
+    volumes:
+      - ./backend:/www
     ports:
       - "5000:5000"
     #env_file:
