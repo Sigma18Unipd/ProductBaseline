@@ -22,6 +22,7 @@ import { useNavigate } from "react-router";
 import axios from "axios";
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
+import { useEffect } from "react"
 
 
 
@@ -55,19 +56,6 @@ function onSubmit(values: z.infer<typeof formSchema>) {
 
 
 
-document.addEventListener("readystatechange", () => {
-  if (document.readyState === "complete") {
-    setTimeout(() => {
-      if (localStorage.getItem("nextPageAlert")) {
-        toast.error(localStorage.getItem("nextPageAlert"));
-        localStorage.removeItem("nextPageAlert");
-      }
-    }, 1000);
-  }
-});
-
-
-
 export default function Register() {
   const navigate = useNavigate();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -78,6 +66,14 @@ export default function Register() {
       password2: "",
     },
   })
+  useEffect(() => {
+    if (localStorage.getItem("nextPageAlert")) {
+      setTimeout(() => {
+        toast.error(localStorage.getItem("nextPageAlert"));
+        localStorage.removeItem("nextPageAlert");
+      }, 1500);
+    }
+  }, []);
   return (
     <div className="flex flex-row min-h-screen justify-center items-center">
       <Toaster />

@@ -184,13 +184,25 @@ def new_workflow():
 def get_workflow(id):
 	flow = db.workflows.find_one({"_id": id, "email": g.email})
 	if not flow:
-		return jsonify({"error": "Workflow not found"}), 404
+		return jsonify({"error": "Workflow not found"}), 401
 	return jsonify({
 		"id": str(flow["_id"]),
 		"name": flow["name"],
-		"contents": flow["contents"],
+		"contents": '{"nodes":[{"data":{"seconds":"3","title":"System - Wait (seconds)"},"id":"node-1","position":{"x":0,"y":0},"type":"systemWaitSeconds","measured":{"width":267,"height":78}},{"data":{"botToken":"7881088601:AAGWV8WQ5_dqYk6vRhpnoHFfDDRJ9A9JagQ","chatId":"-4976500325","message":"AAAAH"},"id":"node-2","position":{"x":365.28229165249184,"y":152.9319670169303},"type":"telegramSendBotMessage","measured":{"width":307,"height":78},"selected":false,"dragging":false},{"data":{"seconds":"5","title":"System - Wait (seconds)"},"id":"node-3","position":{"x":628.2431953008505,"y":-25.305289506398537},"type":"systemWaitSeconds","measured":{"width":267,"height":78},"selected":false,"dragging":false},{"data":{"botToken":"7881088601:AAGWV8WQ5_dqYk6vRhpnoHFfDDRJ9A9JagQ","chatId":"-4976500325","message":"GENERATETHIS"},"id":"node-4","position":{"x":921.7247207675637,"y":133.19699475376487},"type":"telegramSendBotMessage","measured":{"width":307,"height":78},"selected":true,"dragging":false}],"edges":[{"id":"edge-1","source":"node-1","target":"node-2"},{"id":"edge-2","source":"node-2","target":"node-3"},{"id":"edge-3","source":"node-3","target":"node-4"}]}'
 	}), 200
 	
+@app.route('/api/flows/<id>/delete', methods=['DELETE'])
+@protected
+def delete_workflow(id):
+	flow = db.workflows.find_one({"_id": id, "email": g.email})
+	if not flow:
+		return jsonify({"error": "Workflow not found"}), 401
+	try:
+		db.workflows.delete_one({"_id": id, "email": g.email})
+		return jsonify({"message": "Workflow deleted successfully"}), 200
+	except Exception as e:
+		return jsonify({"error": str(e)}), 401
+
  
  
  
@@ -203,14 +215,6 @@ def get_workflow(id):
  
  
  
- 
- 
-	# OLD CODE
-	#flow = db.fetchone("SELECT * FROM workflows WHERE id = ?", (id, ))
-	#if not flow or flow[1] != clientEmail:
-	#  return jsonify({"error": "Workflow not found or does not belong to the client"}), 404
-	#flow = dict(zip(['id', 'clientEmail', 'name', 'contents'], flow))
-	
 	
 @app.route('/api/flows/<id>/save', methods=['POST'])
 @protected
@@ -230,18 +234,6 @@ def save_workflow(id):
 		return jsonify({"error": str(e)}), 500
 
 
-@app.route('/api/flows/<id>/delete', methods=['DELETE'])
-@protected
-def delete_workflow(id):
-	flow = db.workflows.find_one({"_id": id, "email": g.email})
-	if not flow:
-		return jsonify({"error": "Workflow not found"}), 404
-	try:
-		db.workflows.delete_one({"_id": id, "email": g.email})
-		return jsonify({"message": "Workflow deleted successfully"}), 200
-	except Exception as e:
-		print(f"Error deleting workflow: {e}")
-		return jsonify({"error": str(e)}), 500
 
 
 #@app.route('/api/flows/<id>/run', methods=['POST'])

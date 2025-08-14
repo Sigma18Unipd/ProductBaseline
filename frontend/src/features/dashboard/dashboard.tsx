@@ -41,19 +41,6 @@ function createNewWorkflow(newWorkflowName: string) {
 
 
 
-document.addEventListener("readystatechange", () => {
-  if (document.readyState === "complete") {
-    setTimeout(() => {
-      if (localStorage.getItem("nextPageAlert")) {
-        toast.error(localStorage.getItem("nextPageAlert"));
-        localStorage.removeItem("nextPageAlert");
-      }
-    }, 1000);
-  }
-});
-
-
-
 export default function Dashboard() {
   const navigate = useNavigate();
   const [newWorkflowName, setNewWorkflowName] = useState('');
@@ -72,7 +59,16 @@ export default function Dashboard() {
         navigate('/login');
       });
   }, [navigate]);
+  useEffect(() => {
+    if (localStorage.getItem("nextPageAlert")) {
+      setTimeout(() => {
+        toast.error(localStorage.getItem("nextPageAlert"));
+        localStorage.removeItem("nextPageAlert");
+      }, 1500);
+    }
+  }, []);
   if (loading) return null;
+  
   return (
     <div className="grid grid-cols-1 [grid-template-rows:80px_1fr] [grid-template-areas:'topContainer''listContainer'] h-screen">
       <Toaster />

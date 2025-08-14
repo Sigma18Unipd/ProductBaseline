@@ -28,6 +28,7 @@ import axios from "axios";
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import { useNavigate } from "react-router";
+import { useEffect } from "react";
 
 
 
@@ -56,20 +57,15 @@ function onSubmit(values: z.infer<typeof formSchema>) {
 
 
 
-document.addEventListener("readystatechange", () => {
-  if (document.readyState === "complete") {
-    setTimeout(() => {
-      if (localStorage.getItem("nextPageAlert")) {
+export default function Confirm() {
+  useEffect(() => {
+    if (localStorage.getItem("nextPageAlert")) {
+      setTimeout(() => {
         toast.error(localStorage.getItem("nextPageAlert"));
         localStorage.removeItem("nextPageAlert");
-      }
-    }, 1000);
-  }
-});
-
-
-
-export default function Confirm() {
+      }, 1500);
+    }
+  }, []);
   const navigate = useNavigate();
   const storedEmail = localStorage.getItem("email") || "";
   const form = useForm<z.infer<typeof formSchema>>({

@@ -11,7 +11,7 @@ function DefaultErrorPage() {
   return (
     <div>
       <h1>Oops! Something went wrong</h1>
-      <p>The page you’re looking for might have been moved or doesn't exist.</p>
+      <p>The page you're looking for might have been moved or doesn't exist.</p>
       <a href="/login">Click here to Login</a>
     </div>
   );

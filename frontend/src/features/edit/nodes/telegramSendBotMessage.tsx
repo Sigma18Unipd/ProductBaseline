@@ -3,14 +3,14 @@ import { Card, CardTitle } from '@/components/ui/card';
 import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 
@@ -20,16 +20,16 @@ export function telegramSendBotMessage({ data }: { data: { botToken: string, cha
       <Handle type='target' position={Position.Left} isConnectable />
       <div className='flex justify-between items-center gap-6'>
         <CardTitle>Telegram - Send Bot Message</CardTitle>
-        <AlertDialog>
-          <AlertDialogTrigger>
+        <Dialog>
+          <DialogTrigger asChild>
             <Button variant='ghost' size='icon'>
               <Settings className='h-4 w-4' />
             </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Block Settings</AlertDialogTitle>
-            </AlertDialogHeader>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Block Settings</DialogTitle>
+            </DialogHeader>
             Here you can configure the settings for this block.
             <div className='grid gap-2'>
               <Label>Bot Token</Label>
@@ -43,11 +43,13 @@ export function telegramSendBotMessage({ data }: { data: { botToken: string, cha
               <Label>Message</Label>
               <Input type='text' placeholder='Enter your message' defaultValue={data.message} />
             </div>
-            <AlertDialogFooter>
-              <AlertDialogAction>Save</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button>Save</Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
       <Handle type='source' position={Position.Right} isConnectable />
     </Card>

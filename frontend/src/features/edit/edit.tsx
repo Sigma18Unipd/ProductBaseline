@@ -35,9 +35,34 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu"
+import { Separator } from "@/components/ui/separator"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
+import { useRef } from 'react';
 
 
 
+axios.defaults.withCredentials = true;
 const nodeTypes = { systemWaitSeconds: systemWaitSeconds, telegramSendBotMessage: telegramSendBotMessage };
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
@@ -63,14 +88,15 @@ export default function Edit() {
       .then((res) => {
         setLoading(false);
         setWorkflowName(res.data.name);
+        console.log(res.data);
         if (res.data.contents !== "") {
-          const contents = JSON.parse(res.data.workflow.contents);
+          const contents = JSON.parse(res.data.contents);
           setNodes(contents['nodes']);
           setEdges(contents['edges']);
         }
       })
       .catch((err) => {
-        localStorage.setItem('nextPageAlert', err.response.data.error);
+        localStorage.setItem('nextPageAlert', err);
         navigate('/dashboard');
       });
   }, [id, navigate]);
@@ -130,28 +156,17 @@ export default function Edit() {
           </Dialog>
         </div>
         <div className='flex gap-4'>
-          <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
-            <DialogTrigger asChild>
-              <Button variant={'destructive'}>Delete</Button>
-            </DialogTrigger>
-            <DialogContent className='sm:max-w-[500px]'>
-              <DialogHeader>
-                <DialogTitle>Delete workflow</DialogTitle>
-                <DialogDescription>Are you sure you want to delete this workflow?</DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant='outline'>Cancel</Button>
-                </DialogClose>
-                <Button variant='destructive'
-                  onClick={() => {
-                    //TODO
-                  }}>
-                  Delete Workflow
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Sheet>
+            <SheetTrigger><Button>Add a Block</Button></SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Block list</SheetTitle>
+                <SheetDescription>
+                  Add manually a block to your workflow by clicking on it.
+                </SheetDescription>
+              </SheetHeader>
+            </SheetContent>
+          </Sheet>
           <Dialog open={openAiWorkflowDialog} onOpenChange={setOpenAiWorkflowDialog}>
             <DialogTrigger asChild>
               <RainbowButton>AI Workflow Builder</RainbowButton>
@@ -180,14 +195,47 @@ export default function Edit() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          <Button onClick={() => {
-            //TODO
-          }}>
-            Save
-          </Button>
-          <Button onClick={() => {
-            //TODO
-          }}>Run</Button>
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>Workflow Menu</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <NavigationMenuLink asChild><Button variant={'ghost'}>Save</Button></NavigationMenuLink>
+                  <NavigationMenuLink asChild><Button variant={'ghost'}>Run</Button></NavigationMenuLink>
+                  <Separator />
+                  <NavigationMenuLink asChild><Button variant={'ghost'} onClick={() => setOpenDeleteDialog(true)}>Delete</Button></NavigationMenuLink>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+          <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+            <DialogContent className='sm:max-w-[500px]'>
+              <DialogHeader>
+                <DialogTitle>Delete workflow</DialogTitle>
+                <DialogDescription>Are you sure you want to delete this workflow?</DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant='outline'>Cancel</Button>
+                </DialogClose>
+                <Button variant='destructive' onClick={() => {
+                  axios.delete(`http://localhost:5000/api/flows/${id}/delete`)
+                    .then(() => {
+                      localStorage.setItem("nextPageAlert", "Workflow deleted successfully");
+                      navigate("/dashboard");
+                    })
+                    .catch(err => {
+                      localStorage.setItem("nextPageAlert", err);
+                    })
+                    .finally(() => {
+                      setOpenDeleteDialog(false);
+                    });
+                  }}>
+                  Delete Workflow
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
       <div style={{ gridArea: 'editorContainer' }}>
@@ -200,10 +248,10 @@ export default function Edit() {
           nodeTypes={nodeTypes}
           proOptions={{ hideAttribution: true }}
           fitView>
-          <Controls />
-          <Background />
-        </ReactFlow>
-      </div>
+        <Controls />
+        <Background />
+      </ReactFlow>
     </div>
+  </div>
   );
 }
