@@ -34,14 +34,12 @@ except Exception as e:
 flask_singleton = FlaskAppSingleton()
 app = flask_singleton.get_app()
 
-mongo_singleton = MongoDBSingleton(app)
-db = mongo_singleton.get_db()
-
 cors = CORS(app, supports_credentials=True, origins='*')
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['MONGO_URI'] = os.environ.get("MONGO_URI", "mongodb://mongo:27017/mydb")
 
-
+mongo_singleton = MongoDBSingleton(app)
+db = mongo_singleton.get_db()
 
 
 
