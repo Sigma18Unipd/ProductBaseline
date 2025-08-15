@@ -72,7 +72,7 @@ export default function Dashboard() {
   return (
     <div className="grid grid-cols-1 [grid-template-rows:80px_1fr] [grid-template-areas:'topContainer''listContainer'] h-screen">
       <Toaster />
-      <div className="flex items-center place-content-between mx-[24px]" style={{ gridArea: 'topContainer' }}>
+      <div className="flex items-center place-content-between px-[24px]" style={{ gridArea: 'topContainer', borderBottom: '1px solid #e5e5e5' }}>
         <div>{email}</div>
         <div className='flex gap-4'>
           <Dialog>

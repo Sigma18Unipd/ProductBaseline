@@ -52,13 +52,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu"
-import { useRef } from 'react';
 
 
 
@@ -88,15 +81,14 @@ export default function Edit() {
       .then((res) => {
         setLoading(false);
         setWorkflowName(res.data.name);
-        console.log(res.data);
-        if (res.data.contents !== "") {
+        try {
           const contents = JSON.parse(res.data.contents);
           setNodes(contents['nodes']);
           setEdges(contents['edges']);
-        }
+        } catch (error) { /* empty */ } 
       })
       .catch((err) => {
-        localStorage.setItem('nextPageAlert', err);
+        localStorage.setItem('nextPageAlert', err.response?.data?.error);
         navigate('/dashboard');
       });
   }, [id, navigate]);
@@ -120,44 +112,52 @@ export default function Edit() {
   return (
     <div className="grid grid-cols-1 [grid-template-rows:80px_1fr] [grid-template-areas:'topContainer''editorContainer'] h-screen">
       <Toaster />
-      <div className='flex items-center place-content-between' style={{ margin: '0 24px', gridArea: 'topContainer' }}>
+      <div className='flex items-center place-content-between px-[24px]' style={{ gridArea: 'topContainer', borderBottom: '1px solid #e5e5e5' }}>
         <div className='flex gap-4 items-center'>
-          <Button onClick= { ()=> { navigate("/dashboard") }}>Back to Dashboard</Button>
-          <span style={{ marginLeft: 8 }}>{workflowName}</span>
-          <Dialog open={openChangeNameDialog} onOpenChange={setOpenChangeNameDialog}>
-            <DialogTrigger asChild>
-              <Button style={{ marginLeft: 5 }}  variant="ghost" size="icon">
-                <PencilIcon className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className='sm:max-w-[500px]'>
-              <DialogHeader>
-                <DialogTitle>Edit Workflow Name</DialogTitle>
-              </DialogHeader>
-              <div className='grid gap-4'>
-                <div className='grid gap-2'>
-                  <Label htmlFor='name-1'>Rename your workflow</Label>
-                  <Input type='text' onChange={(e) => setNewWorkflowName(e.target.value)} placeholder='New name here' />
+          <Button onClick={()=> { navigate("/dashboard") }}>Back to Dashboard</Button>
+          <div className='flex gap-4 items-center' style={{ paddingLeft: "10px", border: '1px solid #e5e5e5', borderRadius: 'var(--radius)' }}>
+            <span>{workflowName}</span>
+            <Dialog open={openChangeNameDialog} onOpenChange={setOpenChangeNameDialog}>
+              <DialogTrigger asChild>
+                <span>
+                  <Button size="icon" variant="ghost">
+                    <PencilIcon className="h-4 w-4" />
+                  </Button>
+                </span>
+              </DialogTrigger>
+              <DialogContent className='sm:max-w-[500px]'>
+                <DialogHeader>
+                  <DialogTitle>Edit Workflow Name</DialogTitle>
+                </DialogHeader>
+                <div className='grid gap-4'>
+                  <div className='grid gap-2'>
+                    <Label htmlFor='name-1'>Rename your workflow</Label>
+                    <Input type='text' onChange={(e) => setNewWorkflowName(e.target.value)} placeholder='New name here' />
+                  </div>
                 </div>
-              </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant='outline'>Cancel</Button>
-                </DialogClose>
-                <Button
-                  onClick={async () => {
-                    setWorkflowName(newWorkflowName);
-                    setOpenChangeNameDialog(false);
-                  }}>
-                  Edit Name
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant='outline'>Cancel</Button>
+                  </DialogClose>
+                  <Button
+                    onClick={async () => {
+                      setWorkflowName(newWorkflowName);
+                      setOpenChangeNameDialog(false);
+                    }}>
+                    Edit Name
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
         <div className='flex gap-4'>
           <Sheet>
-            <SheetTrigger><Button>Add a Block</Button></SheetTrigger>
+            <SheetTrigger asChild>
+              <span>
+                <Button>Add a Block</Button>
+              </span>
+            </SheetTrigger>
             <SheetContent>
               <SheetHeader>
                 <SheetTitle>Block list</SheetTitle>
@@ -188,7 +188,16 @@ export default function Edit() {
                 </DialogClose>
                 <RainbowButton
                   onClick={() => {
-                    //TODO
+                    axios.post('http://localhost:5000/api/prompt', { prompt: promptValue })
+                      .then((res) => {
+                        console.log("AI Workflow Response: ", res.data);
+                        setNodes(res.data.nodes);
+                        setEdges(res.data.edges);
+                      })
+                      .catch((err) => {
+                        toast.error(err.response?.data?.error || "An error occurred while generating the workflow");
+                      });
+                    setOpenAiWorkflowDialog(false);
                   }}>
                   Generate Workflow
                 </RainbowButton>
@@ -198,9 +207,20 @@ export default function Edit() {
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
-                <NavigationMenuTrigger>Workflow Menu</NavigationMenuTrigger>
+                <NavigationMenuTrigger style={{ border: '1px solid #e5e5e5' }}>Workflow Menu</NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <NavigationMenuLink asChild><Button variant={'ghost'}>Save</Button></NavigationMenuLink>
+                  <NavigationMenuLink asChild><Button variant={'ghost'} onClick={() => {
+                    axios.post(`http://localhost:5000/api/flows/${id}/save`, {
+                      name: workflowName,
+                      contents: JSON.stringify({ nodes, edges }),
+                    })
+                      .then(() => {
+                        toast.error("Workflow saved successfully");
+                      })
+                      .catch(err => {
+                        toast.error(err.response?.data?.error || "An error occurred while saving the workflow");
+                      });
+                  }}>Save</Button></NavigationMenuLink>
                   <NavigationMenuLink asChild><Button variant={'ghost'}>Run</Button></NavigationMenuLink>
                   <Separator />
                   <NavigationMenuLink asChild><Button variant={'ghost'} onClick={() => setOpenDeleteDialog(true)}>Delete</Button></NavigationMenuLink>
@@ -225,7 +245,7 @@ export default function Edit() {
                       navigate("/dashboard");
                     })
                     .catch(err => {
-                      localStorage.setItem("nextPageAlert", err);
+                      localStorage.setItem("nextPageAlert", err.response?.data?.error);
                     })
                     .finally(() => {
                       setOpenDeleteDialog(false);

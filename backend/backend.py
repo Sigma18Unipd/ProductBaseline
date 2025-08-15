@@ -76,9 +76,9 @@ def login():
 	except client.exceptions.UserNotFoundException:
 		return jsonify({"error": "User not found"}), 401
 	except client.exceptions.TooManyRequestsException:
-		return jsonify({"error": "Too many login attempts. Please try again later"}), 401
+		return jsonify({"error": "Too many login attempts. Please try again later"}), 429
 	except Exception as e:
-		return jsonify({"error": str(e)}), 401
+		return jsonify({"error": str(e)}), 500
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -92,11 +92,11 @@ def register():
 		)
 		return jsonify({"message": "User registered. Please confirm email."}), 200
 	except client.exceptions.LimitExceededException:
-		return jsonify({"error": "Email quota limit exceeded"}), 401
+		return jsonify({"error": "Email quota limit exceeded"}), 500
 	except client.exceptions.UsernameExistsException:
-		return jsonify({"error": "User already exists"}), 401
+		return jsonify({"error": "User already exists"}), 409
 	except Exception as e:
-		return jsonify({"error": str(e)}), 401
+		return jsonify({"error": str(e)}), 500
 
 @app.route('/confirm', methods=['POST'])
 def confirm():
@@ -109,13 +109,13 @@ def confirm():
 		)
 		return jsonify({"message": "User confirmed successfully."}), 200
 	except client.exceptions.UserNotFoundException:
-		return jsonify({"error": "User not found"}), 401
+		return jsonify({"error": "User not found"}), 404
 	except client.exceptions.CodeMismatchException:
-		return jsonify({"error": "Code not valid"}), 401
+		return jsonify({"error": "Code not valid"}), 404
 	except client.exceptions.ExpiredCodeException:
-		return jsonify({"error": "Code Expired"}), 401
+		return jsonify({"error": "Code Expired"}), 404
 	except Exception as e:
-		return jsonify({"error": str(e)}), 401
+		return jsonify({"error": str(e)}), 500
 
 
 
@@ -168,7 +168,7 @@ def new_workflow():
 	data = request.get_json()
 	name = data.get('name')
 	if not name:
-		return jsonify({"error": "Workflow name is required"}), 401
+		return jsonify({"error": "Workflow name is required"}), 400
 	new_id = str(uuid.uuid4())
 	try:
 		db.workflows.insert_one({
@@ -179,36 +179,58 @@ def new_workflow():
 		})
 		return jsonify({"id": new_id}), 200
 	except Exception as e:
-		return jsonify({"error": str(e)}), 401
+		return jsonify({"error": str(e)}), 500
 
 @app.route('/api/flows/<id>', methods=['POST'])
 @protected
 def get_workflow(id):
 	flow = db.workflows.find_one({"_id": id, "email": g.email})
 	if not flow:
-		return jsonify({"error": "Workflow not found"}), 401
+		return jsonify({"error": "Workflow not found"}), 404
 	return jsonify({
 		"id": str(flow["_id"]),
 		"name": flow["name"],
-		"contents": json.dumps(flow["contents"]),
+		"contents": flow["contents"],
 	}), 200
+
+@app.route('/api/flows/<id>/delete', methods=['DELETE'])
+@protected
+def delete_workflow(id):
+	flow = db.workflows.find_one({"_id": id, "email": g.email})
+	if not flow:
+		return jsonify({"error": "Workflow not found"}), 404
+	try:
+		db.workflows.delete_one({"_id": id, "email": g.email})
+		return jsonify({"message": "Workflow deleted successfully"}), 200
+	except Exception as e:
+		return jsonify({"error": str(e)}), 500
+
+
+
+
+
+
+
 
 @app.route('/api/flows/<id>/save', methods=['POST'])
 @protected
 def save_workflow(id):
 	data = request.get_json()
+	print(f"Saving workflow {id} with data: {data}")
 	flow = db.workflows.find_one({"_id": id, "email": g.email})
 	if not flow:
 		return jsonify({"error": "Workflow not found"}), 404
 	try:
 		db.workflows.update_one(
 			{"_id": id, "email": g.email},
-			{"$set": {"contents": data["contents"]}}
+			{"$set": {"contents": data["contents"], "name": data["name"]}}
 		)
 		return jsonify({"message": "Workflow saved successfully"}), 200
 	except Exception as e:
-		print(f"Error saving workflow: {e}")
 		return jsonify({"error": str(e)}), 500
+
+
+
 
 @app.route('/api/flows/<id>/run', methods=['POST'])
 @protected
@@ -221,12 +243,14 @@ def run_workflow(id):
 		#return runner.run(contents)
 		return jsonify({"message": "Not implemented :)", "contents": contents}), 200
 	except Exception as e:
-		print(f"Error running workflow: {e}")
 		return jsonify({"error": str(e)}), 500
 
-@cross_origin
+
+
+
 @app.route('/api/prompt', methods=['POST'])
-def ai_flow():
+@protected
+def ai_workflow():
   data = request.get_json()
   prompt = data.get('prompt', '')
   if not prompt:
