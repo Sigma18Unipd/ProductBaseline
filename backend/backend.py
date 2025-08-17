@@ -3,7 +3,7 @@ from flask import json, make_response, redirect, request, jsonify, g
 from flask_cors import CORS, cross_origin
 import boto3
 from flaskAppSingleton import FlaskAppSingleton
-from mongodbSingleton import MongoDBSingleton
+from db.mongodbSingleton import MongoDBSingleton
 from utils.jwtUtils import generateJwt, verifyJwt
 from dotenv import load_dotenv
 import os
