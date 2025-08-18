@@ -1,6 +1,6 @@
 import uuid
-from flask import json, make_response, redirect, request, jsonify, g
-from flask_cors import CORS, cross_origin
+from flask import make_response, redirect, request, jsonify, g
+from flask_cors import CORS
 import boto3
 from flaskAppSingleton import FlaskAppSingleton
 from db.mongodbSingleton import MongoDBSingleton
@@ -9,6 +9,10 @@ from dotenv import load_dotenv
 import os
 from functools import wraps
 from llm.llmSanitizer import process_prompt
+from utils.log import IS_DEV
+import logging
+
+logger = logging.getLogger(__name__)
 # import jwt
 # import datetime
 # import hmac
@@ -28,7 +32,7 @@ try:
         aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
     )
 except Exception as e:
-    print(f"Errore configurazione AWS: {e}")
+    logger.warning("Errore configurazione AWS: %s", e)
 
 flask_singleton = FlaskAppSingleton()
 app = flask_singleton.get_app()
@@ -46,7 +50,7 @@ db = mongo_singleton.get_db()
 def login():
     data = request.get_json()
     try:
-        res = client.initiate_auth(
+        client.initiate_auth(
             AuthFlow="USER_PASSWORD_AUTH",
             AuthParameters={
                 "USERNAME": data["email"],
@@ -76,6 +80,7 @@ def login():
             {"error": "Too many login attempts. Please try again later"}
         ), 429
     except Exception as e:
+        logger.exception("Error during login: %s", e)
         return jsonify({"error": str(e)}), 500
 
 
@@ -95,6 +100,7 @@ def register():
     except client.exceptions.UsernameExistsException:
         return jsonify({"error": "User already exists"}), 409
     except Exception as e:
+        logger.exception("Error in register: %s", e)
         return jsonify({"error": str(e)}), 500
 
 
@@ -115,6 +121,7 @@ def confirm():
     except client.exceptions.ExpiredCodeException:
         return jsonify({"error": "Code Expired"}), 404
     except Exception as e:
+        logger.exception("Error in confirm: %s", e)
         return jsonify({"error": str(e)}), 500
 
 
@@ -128,6 +135,7 @@ def protected(f):
                 return redirect("/login"), 302
             g.email = payload["email"]
         except Exception as e:
+            logger.debug("Protected route auth failed: %s", e)
             return redirect("/login"), 302
         return f(*args, **kwargs)
 
@@ -180,6 +188,7 @@ def new_workflow():
         )
         return jsonify({"id": new_id}), 200
     except Exception as e:
+        logger.exception("Error creating workflow: %s", e)
         return jsonify({"error": str(e)}), 500
 
 
@@ -208,6 +217,7 @@ def delete_workflow(id):
         db.workflows.delete_one({"_id": id, "email": g.email})
         return jsonify({"message": "Workflow deleted successfully"}), 200
     except Exception as e:
+        logger.exception("Error deleting workflow %s: %s", id, e)
         return jsonify({"error": str(e)}), 500
 
 
@@ -215,7 +225,7 @@ def delete_workflow(id):
 @protected
 def save_workflow(id):
     data = request.get_json()
-    print(f"Saving workflow {id} with data: {data}")
+    logger.debug("Saving workflow %s with data: %s", id, data)
     flow = db.workflows.find_one({"_id": id, "email": g.email})
     if not flow:
         return jsonify({"error": "Workflow not found"}), 404
@@ -226,6 +236,7 @@ def save_workflow(id):
         )
         return jsonify({"message": "Workflow saved successfully"}), 200
     except Exception as e:
+        logger.exception("Error saving workflow %s: %s", id, e)
         return jsonify({"error": str(e)}), 500
 
 
@@ -240,6 +251,7 @@ def run_workflow(id):
         # return runner.run(contents)
         return jsonify({"message": "Not implemented :)", "contents": contents}), 200
     except Exception as e:
+        logger.exception("Error running workflow %s: %s", id, e)
         return jsonify({"error": str(e)}), 500
 
 
@@ -254,10 +266,11 @@ def ai_workflow():
         response = process_prompt(prompt)
         return jsonify(response), 200
     except Exception as e:
-        print(f"Error processing prompt: {e}")
+        logger.exception("Error processing prompt: %s", e)
         return jsonify({"error": str(e)}), 500
 
 
 # ---------- RUN ----------
 if __name__ == "__main__":
-    app.run(debug=True)
+    # flask gets set to debug mode when the dev flag is set
+    app.run(debug=IS_DEV)
