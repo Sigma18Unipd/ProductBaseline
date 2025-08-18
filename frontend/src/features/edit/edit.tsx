@@ -63,6 +63,19 @@ const initialEdges: Edge[] = [];
 
 
 export default function Edit() {
+  const [blockSearch, setBlockSearch] = useState("");
+  const blockList = [
+    {
+      key: 'systemWaitSeconds',
+      label: 'System: Wait (Seconds)',
+      data: { seconds: '0' }
+    },
+    {
+      key: 'telegramSendBotMessage',
+      label: 'Telegram: Send Bot Message',
+      data: { botToken: 'TOKEN HERE', chatId: 'CHAT ID HERE', message: 'MESSAGE HERE' }
+    }
+  ];
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const { id } = useParams();
@@ -164,6 +177,34 @@ export default function Edit() {
                 <SheetDescription>
                   Add manually a block to your workflow by clicking on it.
                 </SheetDescription>
+                
+                <div className="grid gap-2 mt-2">
+                  <Input
+                    type="text"
+                    placeholder="Search blocks..."
+                    value={blockSearch}
+                    onChange={e => setBlockSearch(e.target.value)}
+                  />
+                  {blockList
+                    .filter(block => block.label.toLowerCase().includes(blockSearch.toLowerCase()))
+                    .map(block => (
+                    <Button
+                      key={block.key}
+                      variant="outline"
+                      onClick={() => {
+                        const newNode: Node = {
+                          id: `${block.key}-${Date.now()}`,
+                          type: block.key,
+                          position: { x: 0, y: 0 },
+                          data: block.data
+                        };
+                        setNodes(nodes => [...nodes, newNode]);
+                      }}
+                    >
+                      {block.label}
+                    </Button>
+                  ))}
+                </div>
               </SheetHeader>
             </SheetContent>
           </Sheet>

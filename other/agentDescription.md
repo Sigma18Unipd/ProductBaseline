@@ -27,7 +27,6 @@ Here is the list of blocks that can be used:
   "id": "GENERATETHIS",
   "type": "systemWaitSeconds",
   "data": {
-    "title": "System - Wait (seconds)",
     "seconds": ""
   },
   "position": {
