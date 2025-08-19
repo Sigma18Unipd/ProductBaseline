@@ -25,12 +25,11 @@ import { RainbowButton } from '@/components/magicui/rainbow-button';
 import { Textarea } from '@/components/ui/textarea';
 import { useState, useEffect, useCallback} from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { systemWaitSeconds } from './nodes/systemWaitSeconds';
-import { telegramSendBotMessage } from './nodes/telegramSendBotMessage';
+import { SystemWaitSeconds } from './nodes/systemWaitSeconds';
+import { TelegramSendBotMessage } from './nodes/telegramSendBotMessage';
 import axios from 'axios';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
-import { PencilIcon } from "lucide-react"
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Toaster } from "@/components/ui/sonner"
@@ -52,30 +51,65 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
+import confetti from "canvas-confetti";
+
+
+
+function confettiAIAnimation() {
+  const end = Date.now() + 3 * 1000;
+  const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
+  const frame = () => {
+    if (Date.now() > end) return;
+    confetti({
+      particleCount: 2,
+      angle: 60,
+      spread: 55,
+      startVelocity: 60,
+      origin: { x: 0, y: 0.5 },
+      colors: colors,
+    });
+    confetti({
+      particleCount: 2,
+      angle: 120,
+      spread: 55,
+      startVelocity: 60,
+      origin: { x: 1, y: 0.5 },
+      colors: colors,
+    });
+    requestAnimationFrame(frame);
+  };
+  frame();
+};
 
 
 
 axios.defaults.withCredentials = true;
-const nodeTypes = { systemWaitSeconds: systemWaitSeconds, telegramSendBotMessage: telegramSendBotMessage };
+const nodeTypes = { systemWaitSeconds: SystemWaitSeconds, telegramSendBotMessage: TelegramSendBotMessage };
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
+const blockList = [
+  {
+    key: 'systemWaitSeconds',
+    label: 'System: Wait Seconds',
+    data: { seconds: '0' }
+  },
+  {
+    key: 'telegramSendBotMessage',
+    label: 'Telegram: Send Bot Message',
+    data: { botToken: 'TOKEN HERE', chatId: 'CHAT ID HERE', message: 'YOUR MESSAGE' }
+  }
+];
 
 
 
 export default function Edit() {
   const [blockSearch, setBlockSearch] = useState("");
-  const blockList = [
-    {
-      key: 'systemWaitSeconds',
-      label: 'System: Wait (Seconds)',
-      data: { seconds: '0' }
-    },
-    {
-      key: 'telegramSendBotMessage',
-      label: 'Telegram: Send Bot Message',
-      data: { botToken: 'TOKEN HERE', chatId: 'CHAT ID HERE', message: 'MESSAGE HERE' }
-    }
-  ];
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const { id } = useParams();
@@ -122,92 +156,62 @@ export default function Edit() {
   );
   if (loading) return null;
 
+  // ------------ WORKFLOW FUNCTIONS --------------
+  function saveWorkflow() {
+    axios.post(`http://localhost:5000/api/flows/${id}/save`, {
+      name: workflowName,
+      contents: JSON.stringify({ nodes, edges }),
+    })
+      .then(() => {
+        toast.error("Workflow saved successfully");
+      })
+      .catch(err => {
+        toast.error(err.response?.data?.error || "An error occurred while saving the workflow");
+      });
+  }
+  function deleteWorkflow() {
+    axios.delete(`http://localhost:5000/api/flows/${id}/delete`)
+      .then(() => {
+        localStorage.setItem("nextPageAlert", "Workflow deleted successfully");
+        navigate("/dashboard");
+      })
+      .catch(err => {
+        localStorage.setItem("nextPageAlert", err.response?.data?.error);
+      })
+      .finally(() => {
+        setOpenDeleteDialog(false);
+      });
+  }
+  function runWorkflow() {
+    toast.error("This feature is not implemented yet");
+  }
+
   return (
     <div className="grid grid-cols-1 [grid-template-rows:80px_1fr] [grid-template-areas:'topContainer''editorContainer'] h-screen">
       <Toaster />
       <div className='flex items-center place-content-between px-[24px]' style={{ gridArea: 'topContainer', borderBottom: '1px solid #e5e5e5' }}>
         <div className='flex gap-4 items-center'>
-          <Button onClick={()=> { navigate("/dashboard") }}>Back to Dashboard</Button>
-          <div className='flex gap-4 items-center' style={{ paddingLeft: "10px", border: '1px solid #e5e5e5', borderRadius: 'var(--radius)' }}>
-            <span>{workflowName}</span>
-            <Dialog open={openChangeNameDialog} onOpenChange={setOpenChangeNameDialog}>
-              <DialogTrigger asChild>
-                <span>
-                  <Button size="icon" variant="ghost">
-                    <PencilIcon className="h-4 w-4" />
-                  </Button>
-                </span>
-              </DialogTrigger>
-              <DialogContent className='sm:max-w-[500px]'>
-                <DialogHeader>
-                  <DialogTitle>Edit Workflow Name</DialogTitle>
-                </DialogHeader>
-                <div className='grid gap-4'>
-                  <div className='grid gap-2'>
-                    <Label htmlFor='name-1'>Rename your workflow</Label>
-                    <Input type='text' onChange={(e) => setNewWorkflowName(e.target.value)} placeholder='New name here' />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant='outline'>Cancel</Button>
-                  </DialogClose>
-                  <Button
-                    onClick={async () => {
-                      setWorkflowName(newWorkflowName);
-                      setOpenChangeNameDialog(false);
-                    }}>
-                    Edit Name
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger style={{ border: '1px solid #e5e5e5' }}>Workflow Menu</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <NavigationMenuLink asChild><Button variant={'ghost'} onClick={saveWorkflow}>Save</Button></NavigationMenuLink>
+                  <NavigationMenuLink asChild><Button variant={'ghost'} onClick={runWorkflow}>Run</Button></NavigationMenuLink>
+                  <Separator />
+                  <NavigationMenuLink asChild><Button variant={'ghost'} onClick={() => setOpenDeleteDialog(true)}>Delete</Button></NavigationMenuLink>
+                  <NavigationMenuLink asChild><Button variant={'ghost'} onClick={() => setOpenChangeNameDialog(true)}>Edit Workflow Name</Button></NavigationMenuLink>
+                  <Separator />
+                  <NavigationMenuLink asChild><Button variant={'ghost'} onClick={() => navigate("/dashboard")}>Back to Dashboard</Button></NavigationMenuLink>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+          <div className='flex gap-4 items-center'>
+          {workflowName}
           </div>
         </div>
         <div className='flex gap-4'>
-          <Sheet>
-            <SheetTrigger asChild>
-              <span>
-                <Button>Add a Block</Button>
-              </span>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Block list</SheetTitle>
-                <SheetDescription>
-                  Add manually a block to your workflow by clicking on it.
-                </SheetDescription>
-                
-                <div className="grid gap-2 mt-2">
-                  <Input
-                    type="text"
-                    placeholder="Search blocks..."
-                    value={blockSearch}
-                    onChange={e => setBlockSearch(e.target.value)}
-                  />
-                  {blockList
-                    .filter(block => block.label.toLowerCase().includes(blockSearch.toLowerCase()))
-                    .map(block => (
-                    <Button
-                      key={block.key}
-                      variant="outline"
-                      onClick={() => {
-                        const newNode: Node = {
-                          id: `${block.key}-${Date.now()}`,
-                          type: block.key,
-                          position: { x: 0, y: 0 },
-                          data: block.data
-                        };
-                        setNodes(nodes => [...nodes, newNode]);
-                      }}
-                    >
-                      {block.label}
-                    </Button>
-                  ))}
-                </div>
-              </SheetHeader>
-            </SheetContent>
-          </Sheet>
           <Dialog open={openAiWorkflowDialog} onOpenChange={setOpenAiWorkflowDialog}>
             <DialogTrigger asChild>
               <RainbowButton>AI Workflow Builder</RainbowButton>
@@ -234,41 +238,60 @@ export default function Edit() {
                         console.log("AI Workflow Response: ", res.data);
                         setNodes(res.data.nodes);
                         setEdges(res.data.edges);
+                        setOpenAiWorkflowDialog(false);
+                        confettiAIAnimation();
                       })
                       .catch((err) => {
+                        setOpenAiWorkflowDialog(false);
                         toast.error(err.response?.data?.error || "An error occurred while generating the workflow");
                       });
-                    setOpenAiWorkflowDialog(false);
                   }}>
                   Generate Workflow
                 </RainbowButton>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger style={{ border: '1px solid #e5e5e5' }}>Workflow Menu</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <NavigationMenuLink asChild><Button variant={'ghost'} onClick={() => {
-                    axios.post(`http://localhost:5000/api/flows/${id}/save`, {
-                      name: workflowName,
-                      contents: JSON.stringify({ nodes, edges }),
-                    })
-                      .then(() => {
-                        toast.error("Workflow saved successfully");
-                      })
-                      .catch(err => {
-                        toast.error(err.response?.data?.error || "An error occurred while saving the workflow");
-                      });
-                  }}>Save</Button></NavigationMenuLink>
-                  <NavigationMenuLink asChild><Button variant={'ghost'}>Run</Button></NavigationMenuLink>
-                  <Separator />
-                  <NavigationMenuLink asChild><Button variant={'ghost'} onClick={() => setOpenDeleteDialog(true)}>Delete</Button></NavigationMenuLink>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
+          <Sheet>
+            <SheetTrigger asChild>
+              <span>
+                <Button>Add a Block</Button>
+              </span>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Block list</SheetTitle>
+                <SheetDescription>
+                  Add manually a block to your workflow by clicking on it.
+                </SheetDescription>
+                <div className="grid gap-2 mt-2">
+                  <Input
+                    type="text"
+                    placeholder="Search blocks..."
+                    value={blockSearch}
+                    onChange={e => setBlockSearch(e.target.value)}
+                  />
+                  {blockList.filter(block => block.label.toLowerCase().includes(blockSearch.toLowerCase()))
+                    .map(block => (
+                    <Button
+                      key={block.key}
+                      variant="outline"
+                      onClick={() => {
+                        const newNode: Node = {
+                          id: `${block.key}-${Date.now()}`,
+                          type: block.key,
+                          position: { x: Math.random() * 300, y: Math.random() * 300 },
+                          data: block.data
+                        };
+                        setNodes(nodes => [...nodes, newNode]);
+                      }}
+                    >
+                      {block.label}
+                    </Button>
+                  ))}
+                </div>
+              </SheetHeader>
+            </SheetContent>
+          </Sheet>
           <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
             <DialogContent className='sm:max-w-[500px]'>
               <DialogHeader>
@@ -279,40 +302,61 @@ export default function Edit() {
                 <DialogClose asChild>
                   <Button variant='outline'>Cancel</Button>
                 </DialogClose>
-                <Button variant='destructive' onClick={() => {
-                  axios.delete(`http://localhost:5000/api/flows/${id}/delete`)
-                    .then(() => {
-                      localStorage.setItem("nextPageAlert", "Workflow deleted successfully");
-                      navigate("/dashboard");
-                    })
-                    .catch(err => {
-                      localStorage.setItem("nextPageAlert", err.response?.data?.error);
-                    })
-                    .finally(() => {
-                      setOpenDeleteDialog(false);
-                    });
-                  }}>
+                <Button variant='destructive' onClick={deleteWorkflow}>
                   Delete Workflow
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          <Dialog open={openChangeNameDialog} onOpenChange={setOpenChangeNameDialog}>
+              <DialogContent className='sm:max-w-[500px]'>
+                <DialogHeader>
+                  <DialogTitle>Edit Workflow Name</DialogTitle>
+                </DialogHeader>
+                <div className='grid gap-4'>
+                  <div className='grid gap-2'>
+                    <Label htmlFor='name-1'>Rename your workflow</Label>
+                    <Input type='text' onChange={(e) => setNewWorkflowName(e.target.value)} placeholder='New name here' />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant='outline'>Cancel</Button>
+                  </DialogClose>
+                  <Button
+                    onClick={async () => {
+                      setWorkflowName(newWorkflowName);
+                      setOpenChangeNameDialog(false);
+                    }}>
+                    Edit Name
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
         </div>
       </div>
       <div style={{ gridArea: 'editorContainer' }}>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          proOptions={{ hideAttribution: true }}
-          fitView>
-        <Controls />
-        <Background />
-      </ReactFlow>
-    </div>
+        <ContextMenu>
+          <ContextMenuTrigger>
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              nodeTypes={nodeTypes}
+              proOptions={{ hideAttribution: true }}
+              fitView>
+            <Controls />
+            <Background />
+          </ReactFlow>
+          </ContextMenuTrigger>
+          <ContextMenuContent>
+            <ContextMenuItem onClick={saveWorkflow}>Save</ContextMenuItem>
+            <ContextMenuItem onClick={runWorkflow}>Run</ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
+      </div>
   </div>
   );
 }
