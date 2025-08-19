@@ -194,7 +194,7 @@ export default function Edit() {
                   setOpenDialogMenu(false);
                 }}>
                   <Delete/>
-                  <span>Delete</span>
+                  <span>Delete Workflow</span>
                 </CommandItem>
                 <CommandItem onSelect={() => {
                   setOpenChangeNameDialog(true);
