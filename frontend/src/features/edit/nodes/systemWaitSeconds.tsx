@@ -2,15 +2,7 @@ import { useReactFlow, Handle, Position } from '@xyflow/react';
 import { Card, CardTitle } from '@/components/ui/card';
 import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-} from '@/components/ui/dialog';
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
@@ -19,8 +11,6 @@ export function SystemWaitSeconds({ id, data }: { id: string, data: { seconds: s
   const [seconds, setSeconds] = useState(data.seconds);
   const [draftSeconds, setDraftSeconds] = useState(seconds);
   const reactFlowInstance = useReactFlow();
-
-
   return (
     <Card style={{ padding: '20px 10px 20px 20px' }} className='gap-2'>
       <Handle type='target' position={Position.Left} isConnectable />
