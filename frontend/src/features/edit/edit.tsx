@@ -1,26 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import {
-  ReactFlow,
-  Controls,
-  Background,
-  addEdge,
-  applyEdgeChanges,
-  applyNodeChanges,
-  type Node,
-  type Edge,
-  type NodeChange,
-  type EdgeChange,
-} from '@xyflow/react';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { ReactFlow, Controls, Background, addEdge, applyEdgeChanges, applyNodeChanges, type Node, type Edge, type NodeChange, type EdgeChange } from '@xyflow/react';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { RainbowButton } from '@/components/magicui/rainbow-button';
 import { Textarea } from '@/components/ui/textarea';
 import { useState, useEffect, useCallback} from 'react';
@@ -34,30 +14,12 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu"
-import { Separator } from "@/components/ui/separator"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import confetti from "canvas-confetti";
+import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command"
+import { Save, Play, Delete, Edit2, ChevronLeft } from "lucide-react";
+
+
 
 
 
@@ -89,6 +51,8 @@ function confettiAIAnimation() {
 
 
 
+
+
 axios.defaults.withCredentials = true;
 const nodeTypes = { systemWaitSeconds: SystemWaitSeconds, telegramSendBotMessage: TelegramSendBotMessage };
 const initialNodes: Node[] = [];
@@ -108,6 +72,8 @@ const blockList = [
 
 
 
+
+
 export default function Edit() {
   const [blockSearch, setBlockSearch] = useState("");
   const navigate = useNavigate();
@@ -115,12 +81,15 @@ export default function Edit() {
   const { id } = useParams();
   const [workflowName, setWorkflowName] = useState('');
   const [newWorkflowName, setNewWorkflowName] = useState('');
+  const [openDialogMenu, setOpenDialogMenu] = useState(false);
   const [openChangeNameDialog, setOpenChangeNameDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openAiWorkflowDialog, setOpenAiWorkflowDialog] = useState(false);
   const [promptValue, setPromptValue] = useState('');
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState(initialEdges);
+
+
 
   // ------------ GET DATA --------------
   useEffect(() => {
@@ -140,6 +109,8 @@ export default function Edit() {
       });
   }, [id, navigate]);
 
+
+
   // ------------ REACTFLOW STUFF --------------
   const onNodesChange = useCallback(
     (changes: NodeChange<Node>[]) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
@@ -155,6 +126,8 @@ export default function Edit() {
     [],
   );
   if (loading) return null;
+
+
 
   // ------------ WORKFLOW FUNCTIONS --------------
   function saveWorkflow() {
@@ -186,27 +159,63 @@ export default function Edit() {
     toast.error("This feature is not implemented yet");
   }
 
+
+
   return (
     <div className="grid grid-cols-1 [grid-template-rows:80px_1fr] [grid-template-areas:'topContainer''editorContainer'] h-screen">
       <Toaster />
       <div className='flex items-center place-content-between px-[24px]' style={{ gridArea: 'topContainer', borderBottom: '1px solid #e5e5e5' }}>
         <div className='flex gap-4 items-center'>
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger style={{ border: '1px solid #e5e5e5' }}>Workflow Menu</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <NavigationMenuLink asChild><Button variant={'ghost'} onClick={saveWorkflow}>Save</Button></NavigationMenuLink>
-                  <NavigationMenuLink asChild><Button variant={'ghost'} onClick={runWorkflow}>Run</Button></NavigationMenuLink>
-                  <Separator />
-                  <NavigationMenuLink asChild><Button variant={'ghost'} onClick={() => setOpenDeleteDialog(true)}>Delete</Button></NavigationMenuLink>
-                  <NavigationMenuLink asChild><Button variant={'ghost'} onClick={() => setOpenChangeNameDialog(true)}>Edit Workflow Name</Button></NavigationMenuLink>
-                  <Separator />
-                  <NavigationMenuLink asChild><Button variant={'ghost'} onClick={() => navigate("/dashboard")}>Back to Dashboard</Button></NavigationMenuLink>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
+          <Button onClick={() => setOpenDialogMenu(true)}>Workflow Menu</Button>
+          <CommandDialog className="rounded-lg border shadow-md md:min-w-[450px]" open={openDialogMenu} onOpenChange={setOpenDialogMenu}>
+            <CommandInput placeholder="Type a command or search..." />
+            <CommandList>
+              <CommandEmpty>No results found.</CommandEmpty>
+              <CommandGroup heading="Actions"> 
+                <CommandItem onSelect={() => {
+                  saveWorkflow();
+                  setOpenDialogMenu(false);
+                }}>
+                  <Save />
+                  <span>Save</span>
+                </CommandItem>
+                <CommandItem onSelect={() => {
+                  runWorkflow();
+                  setOpenDialogMenu(false);
+                }}>
+                  <Play />
+                  <span>Run</span>
+                </CommandItem>
+              </CommandGroup>
+              <CommandSeparator />
+              <CommandGroup heading="Settings">
+                <CommandItem onSelect={() => {
+                  setOpenDeleteDialog(true);
+                  setOpenDialogMenu(false);
+                }}>
+                  <Delete/>
+                  <span>Delete</span>
+                </CommandItem>
+                <CommandItem onSelect={() => {
+                  setOpenChangeNameDialog(true);
+                  setOpenDialogMenu(false);
+                }}>
+                  <Edit2 />
+                  <span>Edit Workflow Name</span>
+                </CommandItem>
+              </CommandGroup>
+              <CommandSeparator />
+              <CommandGroup>
+                <CommandItem onSelect={() => {
+                  navigate("/dashboard");
+                  setOpenDialogMenu(false);
+                }}>
+                  <ChevronLeft />
+                  <span>Back to dashboard</span>
+                </CommandItem>
+              </CommandGroup>
+            </CommandList>
+          </CommandDialog>
           <div className='flex gap-4 items-center'>
           {workflowName}
           </div>
@@ -336,26 +345,22 @@ export default function Edit() {
         </div>
       </div>
       <div style={{ gridArea: 'editorContainer' }}>
-        <ContextMenu>
-          <ContextMenuTrigger>
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              nodeTypes={nodeTypes}
-              proOptions={{ hideAttribution: true }}
-              fitView>
-            <Controls />
-            <Background />
-          </ReactFlow>
-          </ContextMenuTrigger>
-          <ContextMenuContent>
-            <ContextMenuItem onClick={saveWorkflow}>Save</ContextMenuItem>
-            <ContextMenuItem onClick={runWorkflow}>Run</ContextMenuItem>
-          </ContextMenuContent>
-        </ContextMenu>
+        <ReactFlow
+          onContextMenu={e => {
+            e.preventDefault();
+            setOpenDialogMenu(true);
+          }}
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          nodeTypes={nodeTypes}
+          proOptions={{ hideAttribution: true }}
+          fitView>
+          <Controls />
+          <Background />
+        </ReactFlow>
       </div>
   </div>
   );
