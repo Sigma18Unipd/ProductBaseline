@@ -7,7 +7,7 @@ JWT_SECRET = os.environ.get("JWT_SECRET", "your_secret_key")
 def generateJwt(email):
   payload = {
     "email": email,
-    "exp": datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=1)
+    "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1)
   }
   return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
