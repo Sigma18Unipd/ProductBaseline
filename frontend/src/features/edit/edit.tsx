@@ -18,6 +18,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import confetti from "canvas-confetti";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command"
 import { Save, Play, Delete, Edit2, ChevronLeft } from "lucide-react";
+import { AiSummarize } from './nodes/aiSummarize';
+import { NotionGetPage } from './nodes/notionGetPage';
 
 
 
@@ -54,7 +56,7 @@ function confettiAIAnimation() {
 
 
 axios.defaults.withCredentials = true;
-const nodeTypes = { systemWaitSeconds: SystemWaitSeconds, telegramSendBotMessage: TelegramSendBotMessage };
+const nodeTypes = { systemWaitSeconds: SystemWaitSeconds, telegramSendBotMessage: TelegramSendBotMessage, aiSummarize: AiSummarize, notionGetPage: NotionGetPage };
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
 const blockList = [
@@ -67,6 +69,15 @@ const blockList = [
     key: 'telegramSendBotMessage',
     label: 'Telegram: Send Bot Message',
     data: { botToken: 'TOKEN HERE', chatId: 'CHAT ID HERE', message: 'YOUR MESSAGE' }
+  },
+  {
+    key: 'aiSummarize',
+    label: 'AI: Summarize',
+  },
+  {
+    key: 'notionGetPage',
+    label: 'Notion: Get Page',
+    data: { internalIntegrationToken: 'TOKEN HERE', pageID: 'PAGE ID HERE' }
   }
 ];
 
@@ -289,7 +300,7 @@ export default function Edit() {
                           id: `${block.key}-${Date.now()}`,
                           type: block.key,
                           position: { x: Math.random() * 300, y: Math.random() * 300 },
-                          data: block.data
+                          data: block.data ?? {}
                         };
                         setNodes(nodes => [...nodes, newNode]);
                       }}
