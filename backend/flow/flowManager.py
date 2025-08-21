@@ -77,7 +77,6 @@ class FlowManager:
                 "status": self.runner.get_status().value,
             }
         return {
-            "logs": [log.to_dict() for log in self.runner.get_logs()],
             "status": self.runner.get_status().value,
         }
 

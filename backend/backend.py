@@ -10,6 +10,8 @@ import os
 from functools import wraps
 from llm.llmSanitizer import process_prompt
 from utils.log import IS_DEV
+from flow.flowManager import FlowManager
+import threading
 import logging
 
 logger = logging.getLogger(__name__)
@@ -248,12 +250,18 @@ def run_workflow(id):
         return jsonify({"error": "Workflow not found"}), 404
     contents = flow.get("contents", {})
     try:
-        # return runner.run(contents)
-        return jsonify({"message": "Not implemented :)", "contents": contents}), 200
+        flow_manager = FlowManager(contents)
+        delegate_to_thread(flow_manager.start_workflow)
+        return 200
     except Exception as e:
         logger.exception("Error running workflow %s: %s", id, e)
         return jsonify({"error": str(e)}), 500
 
+def delegate_to_thread(func, *args, **kwargs):
+    """Helper function to run a function in a separate thread."""
+    thread = threading.Thread(target=func, args=args, kwargs=kwargs)
+    thread.start()
+    return thread
 
 @app.route("/api/prompt", methods=["POST"])
 @protected

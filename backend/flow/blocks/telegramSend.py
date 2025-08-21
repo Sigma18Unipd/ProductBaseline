@@ -59,4 +59,4 @@ class TelegramSendMessage(Block):
 			}
 
 
-BlockFactory.get_block_factory().register_block("telegramSendMessage", TelegramSendMessage)
+BlockFactory.get_block_factory().register_block("telegramSendBotMessage", TelegramSendMessage)

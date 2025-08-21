@@ -167,7 +167,18 @@ export default function Edit() {
       });
   }
   function runWorkflow() {
-    toast.error("This feature is not implemented yet");
+    axios.post(`http://localhost:5000/api/flows/${id}/run`, {
+      contents: JSON.stringify({ nodes, edges }),
+    })
+      .then((res) => {
+        toast.error("Workflow started successfully");
+        console.log("Workflow started successfully", res.data);
+      }
+      )
+      .catch(err => {
+        toast.error(err.response?.data?.error || "An error occurred while running the workflow");
+      }
+      );
   }
 
 
