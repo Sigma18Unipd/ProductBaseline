@@ -167,18 +167,17 @@ export default function Edit() {
       });
   }
   function runWorkflow() {
+    saveWorkflow()
     axios.post(`http://localhost:5000/api/flows/${id}/run`, {
+      name: workflowName,
       contents: JSON.stringify({ nodes, edges }),
     })
-      .then((res) => {
+      .then(() => {
         toast.error("Workflow started successfully");
-        console.log("Workflow started successfully", res.data);
-      }
-      )
+      })
       .catch(err => {
-        toast.error(err.response?.data?.error || "An error occurred while running the workflow");
-      }
-      );
+        toast.error(err.response?.data?.error || "An error occurred while while running the workflow");
+      });
   }
 
 
