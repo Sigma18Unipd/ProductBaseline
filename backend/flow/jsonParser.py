@@ -27,7 +27,7 @@ class JsonParser(JsonParserStrategy):
 
     def _order_nodes(self, json_data: Dict[str, Any]) -> List[str]:
         """Determine the execution order of nodes based on edges"""
-        logger.error(f"Initial nodes: {json_data}")
+        logger.debug(f"Initial nodes: {json_data}")
         nodes = {node["id"]: node for node in json_data.get("nodes", [])}
         ts = TopologicalSorter()
         # to make sure that isolated nodes are also included
