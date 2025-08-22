@@ -1,4 +1,4 @@
-
+from datetime import datetime
 import time
 from typing import Any, Dict
 
@@ -34,10 +34,15 @@ class SystemWaitSeconds(Block):
 
 	def execute(self) -> Dict[str, Any]:
 		super().execute()
-		seconds = float(self.input.get("seconds", 0))
+		seconds = float(self._get_input("seconds"))
 		self._log(f"Waiting for {seconds} seconds")
 		time.sleep(seconds)
 		self._log(f"Waited for {seconds} seconds")
+		if isinstance(self.input, dict):
+			self.output = self.input.copy()
+		if "logOut" not in self.output:
+			self.output["logOut"] = []
+		self.output["logOut"].append(f"waited for {seconds} at {datetime.now().isoformat()}")
 		return {"status": "completed", "type": "systemWaitSeconds", "waited": seconds}
 
 
