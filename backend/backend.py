@@ -251,11 +251,11 @@ def run_workflow(id):
     contents = flow.get("contents", {})
     try:
         flow_manager = FlowManager(contents)
-        delegate_to_thread(flow_manager.start_workflow)
-        return 200
+        flow_manager.start_workflow()
+        return jsonify({"message": "Workflow started successfully"}), 200
     except Exception as e:
         logger.exception("Error running workflow %s: %s", id, e)
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500 
 
 def delegate_to_thread(func, *args, **kwargs):
     """Helper function to run a function in a separate thread."""
