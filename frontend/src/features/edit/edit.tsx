@@ -87,6 +87,7 @@ const blockList = [
 
 
 export default function Edit() {
+  const [colorMode, setColorMode] = useState<'dark' | 'light'>(localStorage.getItem("theme") === "dark" ? "dark" : "light");
   const [blockSearch, setBlockSearch] = useState("");
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -137,6 +138,18 @@ export default function Edit() {
     (params: any) => setEdges((edgesSnapshot) => addEdge(params, edgesSnapshot)),
     [],
   );
+  useEffect(() => {
+    const originalSetItem = localStorage.setItem;
+    localStorage.setItem = function (k, v) {
+      originalSetItem.apply(this, [k, v]);
+      if (k === "theme"){
+        setColorMode(v === "dark" ? "dark" : "light");
+      };
+    };
+    return () => {
+      localStorage.setItem = originalSetItem;
+    };
+  }, []);
   if (loading) return null;
 
 
@@ -168,11 +181,8 @@ export default function Edit() {
       });
   }
   function runWorkflow() {
-    saveWorkflow()
-    axios.post(`http://localhost:5000/api/flows/${id}/run`, {
-      name: workflowName,
-      contents: JSON.stringify({ nodes, edges }),
-    })
+    saveWorkflow();
+    axios.post(`http://localhost:5000/api/flows/${id}/run`)
       .then(() => {
         toast.error("Workflow started successfully");
       })
@@ -379,6 +389,7 @@ export default function Edit() {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
+          colorMode={colorMode}
           proOptions={{ hideAttribution: true }}
           fitView>
           <Controls />

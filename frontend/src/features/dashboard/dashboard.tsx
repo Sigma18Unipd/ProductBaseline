@@ -70,6 +70,18 @@ export default function Dashboard() {
   }, []);
   if (loading) return null;
   
+
+  function runWorkflow(id: number) {
+    axios.post(`http://localhost:5000/api/flows/${id}/run`)
+      .then(() => {
+        toast.error("Workflow started successfully");
+      })
+      .catch(err => {
+        toast.error(err.response?.data?.error || "An error occurred while while running the workflow");
+      });
+  }
+
+
   return (
     <div className="grid grid-cols-1 [grid-template-rows:80px_1fr] [grid-template-areas:'topContainer''listContainer'] h-screen">
       <Toaster />
@@ -120,14 +132,21 @@ export default function Dashboard() {
         {workflows.length > 0 ? (
           workflows.map(workflow => (
             <Card
-              className='w-full max-w-sm'
+              className="w-full max-w-sm"
               onClick={() => (window.location.href = `/edit/${workflow.id}`)}
               key={workflow.id}
             >
               <div className="flex justify-between items-center gap-6 pr-[10px] pl-5">
                 {workflow.name}
-                <Button variant='ghost' size='icon'>
-                  <Play className='h-4 w-4' />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation(); // prevents triggering Card onClick
+                    runWorkflow(workflow.id);
+                  }}
+                >
+                  <Play className="h-4 w-4" />
                 </Button>
               </div>
             </Card>
