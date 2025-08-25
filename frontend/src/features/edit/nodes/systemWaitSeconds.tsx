@@ -41,6 +41,14 @@ export function SystemWaitSeconds({ id, data }: { id: string, data: { seconds: s
               />
             </div>
             <DialogFooter>
+                <Button 
+                  variant="destructive"
+                  onClick={() => {
+                    reactFlowInstance.setNodes((nodeList) => nodeList.filter((thisNode) => thisNode.id !== id));
+                  }}
+                >
+                  Remove Block
+              </Button>
               <DialogClose asChild>
                 <Button variant='outline'>Cancel</Button>
               </DialogClose>

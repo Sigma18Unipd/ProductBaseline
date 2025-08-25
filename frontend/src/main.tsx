@@ -6,15 +6,16 @@ import Register from './features/auth/register';
 import Confirm from './features/auth/confirm';
 import Edit from './features/edit/edit';
 import Dashboard from './features/dashboard/dashboard';
+import { useNavigate } from 'react-router';
+import { useEffect } from 'react';
 
+// eslint-disable-next-line react-refresh/only-export-components
 function DefaultErrorPage() {
-  return (
-    <div>
-      <h1>Oops! Something went wrong</h1>
-      <p>The page you're looking for might have been moved or doesn't exist.</p>
-      <a href="/login">Click here to Login</a>
-    </div>
-  );
+  const navigate = useNavigate();
+  useEffect(() => {
+    navigate("/login");
+  }, [navigate]);
+  return <div>404, Redirecting...</div>;
 }
 
 const router = createBrowserRouter([

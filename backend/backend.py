@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 # import base64
 
 
+
 # ---------- AWS, Cognito, Flask, DB setup ----------
 load_dotenv()
 AWS_REGION = "eu-west-1"
@@ -45,6 +46,7 @@ app.config["MONGO_URI"] = os.environ.get("MONGO_URI", "mongodb://mongo:27017/myd
 
 mongo_singleton = MongoDBSingleton(app)
 db = mongo_singleton.get_db()
+
 
 
 # ---------- Auth Routes ----------
@@ -256,6 +258,7 @@ def run_workflow(id):
     except Exception as e:
         logger.exception("Error running workflow %s: %s", id, e)
         return jsonify({"error": str(e)}), 500 
+
 
 @app.route("/api/prompt", methods=["POST"])
 @protected
