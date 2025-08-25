@@ -7,3 +7,4 @@ pymongo
 Flask-PyMongo
 python-dotenv
 requests
+notion-client

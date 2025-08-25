@@ -257,12 +257,6 @@ def run_workflow(id):
         logger.exception("Error running workflow %s: %s", id, e)
         return jsonify({"error": str(e)}), 500 
 
-def delegate_to_thread(func, *args, **kwargs):
-    """Helper function to run a function in a separate thread."""
-    thread = threading.Thread(target=func, args=args, kwargs=kwargs)
-    thread.start()
-    return thread
-
 @app.route("/api/prompt", methods=["POST"])
 @protected
 def ai_workflow():
