@@ -23,6 +23,7 @@ import axios from "axios";
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import { useEffect } from "react";
+import { AnimatedThemeToggler } from "@/components/magicui/animated-theme-toggler";
 
 
 
@@ -65,58 +66,65 @@ export default function Login() {
     }
   }, []);
   return (
-    <div className="flex flex-row min-h-screen justify-center items-center">
-      <Toaster />
-      <Card className="w-[350px]">
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Enter your credentials to login to your account.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="Insert your email address" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="Insert your password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" className="w-full">Login</Button> 
-          </form>
-        </Form>  
-        <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t" style={{ marginTop: "10px", marginBottom: "10px" }}>
-          <span className="bg-card text-muted-foreground relative z-10 px-2">
-            Or
-          </span>
+    <div>
+      <div className="fixed top-4 right-4 z-50">
+        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white/80 dark:bg-neutral-900/80 backdrop-blur border border-black/10 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow">
+          <AnimatedThemeToggler />
         </div>
-        <div className="flex justify-between">
-          <Button type="button" variant="outline" onClick={()=>{navigate('/register')}}>Register</Button> 
-          <Button type="button" variant="outline" onClick={()=>{navigate('/confirm')}}>Confirm your account</Button> 
-        </div>
-        </CardContent>
-      </Card>
+      </div>
+      <div className="flex flex-row min-h-screen justify-center items-center">
+        <Toaster />
+        <Card className="w-[350px]">
+          <CardHeader>
+            <CardTitle className="text-2xl">Login</CardTitle>
+            <CardDescription>
+              Enter your credentials to login to your account.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="Insert your email address" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="Insert your password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full">Login</Button> 
+            </form>
+          </Form>  
+          <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t" style={{ marginTop: "10px", marginBottom: "10px" }}>
+            <span className="bg-card text-muted-foreground relative z-10 px-2">
+              Or
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <Button type="button" variant="outline" onClick={()=>{navigate('/register')}}>Register</Button> 
+            <Button type="button" variant="outline" onClick={()=>{navigate('/confirm')}}>Confirm your account</Button> 
+          </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

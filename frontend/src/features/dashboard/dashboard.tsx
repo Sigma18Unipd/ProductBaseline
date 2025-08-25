@@ -17,6 +17,7 @@ import { Play } from 'lucide-react';
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import axios from 'axios';
+import { AnimatedThemeToggler } from "@/components/magicui/animated-theme-toggler";
 
 axios.defaults.withCredentials = true;
 
@@ -112,6 +113,7 @@ export default function Dashboard() {
           }}>
             Logout
           </Button>
+          <AnimatedThemeToggler />
         </div>
       </div>
       <div className="[grid-area:listContainer] flex flex-col gap-[10px] items-center pt-5">
