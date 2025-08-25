@@ -19,3 +19,15 @@ Telegram Bot Token
 Telegram ChatID
 -4976500325
 ```
+
+
+
+```
+Send message "2" on telegram, wait 3 seconds, send another message "3".
+
+Telegram Bot Token
+7881088601:AAGWV8WQ5_dqYk6vRhpnoHFfDDRJ9A9JagQ
+
+Telegram ChatID
+-4976500325
+```
