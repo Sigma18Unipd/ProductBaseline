@@ -20,6 +20,7 @@ import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, C
 import { Save, Play, Delete, Edit2, ChevronLeft } from "lucide-react";
 import { AiSummarize } from './nodes/aiSummarize';
 import { NotionGetPage } from './nodes/notionGetPage';
+import { AnimatedThemeToggler } from '@/components/magicui/animated-theme-toggler';
 
 
 
@@ -232,7 +233,7 @@ export default function Edit() {
                   setOpenDialogMenu(false);
                 }}>
                   <ChevronLeft />
-                  <span>Back to dashboard</span>
+                  <span>Back to Dashboard</span>
                 </CommandItem>
               </CommandGroup>
             </CommandList>
@@ -322,6 +323,7 @@ export default function Edit() {
               </SheetHeader>
             </SheetContent>
           </Sheet>
+          <AnimatedThemeToggler />
           <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
             <DialogContent className='sm:max-w-[500px]'>
               <DialogHeader>
