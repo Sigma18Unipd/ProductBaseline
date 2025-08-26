@@ -14,7 +14,7 @@ class SystemWaitSeconds(Block):
 	"""
 
 	def validate_inputs(self) -> bool:
-		seconds = self._get_input("seconds")
+		seconds = self._get_setting("seconds")
 		if seconds is None:
 			logger.error("Missing required input: seconds")
 			logger.error("class data: %s", self.__dict__)
@@ -34,7 +34,7 @@ class SystemWaitSeconds(Block):
 
 	def execute(self) -> Dict[str, Any]:
 		super().execute()
-		seconds = float(self._get_input("seconds", 0))
+		seconds = float(self._get_setting("seconds", 0))
 		self._log(f"Waiting for {seconds} seconds")
 		time.sleep(seconds)
 		self._log(f"Waited for {seconds} seconds")

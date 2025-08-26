@@ -10,12 +10,12 @@ class NotionGetPage(Block):
     """
 
     def validate_inputs(self) -> bool:
-        token = self._get_input("internalIntegrationToken")
+        token = self._get_setting("internalIntegrationToken")
         if not token:
             self._log("Missing required input: internalIntegrationTokenn", "ERROR")
             return False
 
-        page_id = self._get_input("pageID")
+        page_id = self._get_setting("pageID")
         if not page_id:
             self._log("Missing required input: pageID", "ERROR")
             return False
@@ -23,8 +23,8 @@ class NotionGetPage(Block):
         return True
 
     def execute(self) -> Dict[str, Any]:
-        token = self._get_input("internalIntegrationToken")
-        page_id = self._get_input("pageID")
+        token = self._get_setting("internalIntegrationToken")
+        page_id = self._get_setting("pageID")
         self._log(f"Retrieving Notion page {page_id}")
 
         try:

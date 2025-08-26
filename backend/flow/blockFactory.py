@@ -81,7 +81,7 @@ class BlockFactory(ABC):
             return cls(
                 block_id=kwargs.get("id") or kwargs.get("block_id"),
                 name=kwargs.get("name"),
-                input=kwargs.get("input"),
+                settings=kwargs.get("input"),
             )
 
     def get_supported_types(self) -> List[str]:
