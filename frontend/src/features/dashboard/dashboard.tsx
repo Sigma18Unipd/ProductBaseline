@@ -132,7 +132,7 @@ export default function Dashboard() {
         {workflows.length > 0 ? (
           workflows.map(workflow => (
             <Card
-              className="w-full max-w-sm"
+              className="w-full max-w-md"
               onClick={() => (window.location.href = `/edit/${workflow.id}`)}
               key={workflow.id}
             >

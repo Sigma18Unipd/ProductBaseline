@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 # import base64
 
 
+
 # ---------- AWS, Cognito, Flask, DB setup ----------
 load_dotenv()
 AWS_REGION = "eu-west-1"
@@ -45,6 +46,7 @@ app.config["MONGO_URI"] = os.environ.get("MONGO_URI", "mongodb://mongo:27017/myd
 
 mongo_singleton = MongoDBSingleton(app)
 db = mongo_singleton.get_db()
+
 
 
 # ---------- Auth Routes ----------
@@ -183,6 +185,8 @@ def new_workflow():
     name = data.get("name")
     if not name:
         return jsonify({"error": "Workflow name is required"}), 400
+    if len(name) > 25:
+        return jsonify({"error": "Workflow name must be less than 25 characters"}), 400
     new_id = str(uuid.uuid4())
     try:
         db.workflows.insert_one(
@@ -228,6 +232,8 @@ def delete_workflow(id):
 def save_workflow(id):
     data = request.get_json()
     logger.debug("Saving workflow %s with data: %s", id, data)
+    if len(data["name"]) > 25:
+        return jsonify({"error": "Workflow name must be less than 25 characters"}), 400
     flow = db.workflows.find_one({"_id": id, "email": g.email})
     if not flow:
         return jsonify({"error": "Workflow not found"}), 404
@@ -256,6 +262,7 @@ def run_workflow(id):
     except Exception as e:
         logger.exception("Error running workflow %s: %s", id, e)
         return jsonify({"error": str(e)}), 500 
+
 
 @app.route("/api/prompt", methods=["POST"])
 @protected

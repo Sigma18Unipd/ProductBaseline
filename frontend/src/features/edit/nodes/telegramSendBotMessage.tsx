@@ -61,7 +61,15 @@ export function TelegramSendBotMessage({ id, data }: { id: string, data: { botTo
               <p className='text-sm text-gray-500'>To reference the output of the previous block as message (if available), click <span onClick={() => setDraftMessage('{{LASTOUTPUT}}')} className='cursor-pointer underline'>here</span> to set <code>{`{{LASTOUTPUT}}`}</code>.</p>
             </div>
             <DialogFooter>
-               <DialogClose asChild>
+              <Button 
+                  variant="destructive"
+                  onClick={() => {
+                    reactFlowInstance.setNodes((nodeList) => nodeList.filter((thisNode) => thisNode.id !== id));
+                  }}
+                >
+                  Remove Block
+              </Button>
+              <DialogClose asChild>
                 <Button variant='outline'>Cancel</Button>
               </DialogClose>
               <DialogClose asChild>

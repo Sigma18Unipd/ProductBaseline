@@ -49,6 +49,14 @@ export function NotionGetPage({ id, data }: { id: string, data: { internalIntegr
               <Input type='text' placeholder='Enter your Page ID' value={draftPageID} onChange={(e) => setDraftPageID(e.target.value)} />
             </div>
             <DialogFooter>
+                <Button 
+                  variant="destructive"
+                  onClick={() => {
+                    reactFlowInstance.setNodes((nodeList) => nodeList.filter((thisNode) => thisNode.id !== id));
+                  }}
+                >
+                  Remove Block
+              </Button>
                <DialogClose asChild>
                 <Button variant='outline'>Cancel</Button>
               </DialogClose>
