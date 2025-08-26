@@ -13,17 +13,17 @@ class TelegramSendMessage(Block):
 	"""
 
 	def validate_inputs(self) -> bool:
-		botToken = self._get_input("botToken")
+		botToken = self._get_setting("botToken")
 		if not botToken:
 			self._log("Missing required input: botToken", "ERROR")
 			return False
 		
-		chatId = self._get_input("chatId")
+		chatId = self._get_setting("chatId")
 		if not chatId:
 			self._log("Missing required input: chatId", "ERROR")
 			return False
 		
-		message = self._get_input("message")
+		message = self._get_setting("message")
 		if not message:
 			self._log("Missing required input: message", "ERROR")
 			return False
@@ -36,9 +36,9 @@ class TelegramSendMessage(Block):
 		#message = self.input.get("message")
 		
 		
-		botToken = self._get_input("botToken")
-		chatId = self._get_input("chatId")
-		message = self._get_input("message")
+		botToken = self._get_setting("botToken")
+		chatId = self._get_setting("chatId")
+		message = self._get_setting("message")
 		logger.debug("message")
 		if message == '{{LASTOUTPUT}}':
 			logger.debug("grabbing last output")
@@ -46,17 +46,19 @@ class TelegramSendMessage(Block):
 				message = self._get_input("properOut")
 			elif self._get_input("logOut") != "":
 				message = self._get_input("logOut")
-			else:
-				message = ""
 			logger.debug(message)
 
 		self._log(f"Sending message to Telegram bot {botToken} in chat {chatId}: {message}")
 		url = f'https://api.telegram.org/bot{botToken}/sendMessage'
+		print(len(message))
+		message = message[:4095]
+		
 		payload = {
 			'chat_id': chatId,
 			'text': message
 		}
-		
+
+
 		try:
 			response = requests.post(url, data=payload)
 			self._log(f"Telegram response: {response.status_code} - {response.text}")

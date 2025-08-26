@@ -2,6 +2,9 @@ FROM docker.io/node:24-alpine3.20 AS base
 WORKDIR /usr/src
 COPY ./package.json pnpm-lock.yaml ./
 RUN npm install -g pnpm@latest && pnpm install
+RUN pnpm dlx shadcn@latest add "https://magicui.design/r/animated-theme-toggler"
+RUN pnpm dlx shadcn@latest add "https://magicui.design/r/confetti"
+
 
 FROM base AS dev
 EXPOSE 5173

@@ -19,6 +19,23 @@ def agent_facade(prompt):
         completion += chunk["bytes"].decode()
     return completion
 
+def summary_facade(text):
+    print(f"Invoking summarization with text length: {len(text)}")
+    agents_runtime_client = boto3.client("bedrock-agent-runtime", region_name="us-east-1")
+
+    response = agents_runtime_client.invoke_agent(
+        agentId="JSMYPKV9QR",
+        inputText=text,
+        agentAliasId="Q4EOBUZOHP",
+        sessionId=f"session-{uuid.uuid4()}",
+    )
+    completion = ""
+    for event in response.get("completion"):
+        chunk = event["chunk"]
+        completion += chunk["bytes"].decode()
+    return completion
+
+
 if __name__ == "__main__":
     # Test
     raw = agent_facade("Create a workflow that sends a Telegram message using bot sigma18")

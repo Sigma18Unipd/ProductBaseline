@@ -27,7 +27,7 @@ class Block(ABC):
         block_id: Optional[str] = None,
         name: Optional[str] = None,
         shortname: Optional[str] = None,
-        input: Optional[Dict[str, Any]] = None,
+        settings: Optional[Dict[str, Any]] = None,
     ):
         self.id = block_id or str(uuid.uuid4())
         self.name = name or self.__class__.__name__
@@ -36,7 +36,8 @@ class Block(ABC):
         self._execution_logs: List[ExecutionLog] = []
         self.start_time: Optional[datetime] = None
         self.end_time: Optional[datetime] = None
-        self.input = input
+        self.settings: Optional[Dict[str, Any]] = settings
+        self.input: Optional[Dict[str, Any]] = {}
         self.shortname = shortname or self.name
         logger.debug(f"Initialized block - type: {self.__class__.__name__}, ID: {self.id}, input={self.input}")
 
@@ -66,17 +67,12 @@ class Block(ABC):
         logger.debug(f"Input data: {self.input}")
         if isinstance(self.input, dict):
             return self.input.get(key, default)
-        elif isinstance(self.input, list):
-        # If input is a list, try to convert key to index
-            try:
-                index = int(key)
-                if 0 <= index < len(self.input):
-                    return self.input[index]
-            except (ValueError, IndexError):
-                pass
-            return default
-        else:
-            return self.input if key == "value" else default
+        
+    def _get_setting(self, key: str, default: Any = None) -> Any:
+        """Get a setting parameter value"""
+        if self.settings and isinstance(self.settings, dict):
+            return self.settings.get(key, default)
+        return default
 
     def _set_output(self, key: str, value: Any) -> None:
         """Set an output value from the block"""
@@ -102,6 +98,7 @@ class Block(ABC):
             self.start_time = datetime.now()
             if not self.validate_inputs():
                 raise ValueError("Input validation failed")
+            self.input = input
 
             result = self.execute()
 
@@ -121,27 +118,6 @@ class Block(ABC):
     def cancel(self) -> None:
         self.status = Status.CANCELLED
         self._log("Block execution cancelled", "WARNING")
-
-    def reset(self) -> None:
-        self.status = Status.PENDING
-        self.output.clear()
-        self._execution_logs.clear()
-        self.start_time = None
-        self.end_time = None
-        self._log("Block reset to initial state")
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert block to dictionary for serialization"""
-        return {
-            "id": self.id,
-            "name": self.name,
-            "status": self.status.value,
-            "input": self.input,
-            "output": self.output,
-            "start_time": self.start_time.isoformat() if self.start_time else None,
-            "end_time": self.end_time.isoformat() if self.end_time else None,
-            "logs": [log.to_dict() for log in self._execution_logs],
-        }
 
     def __str__(self) -> str:
         return f"Block(id={self.id}, name={self.name}, status={self.status.value})"
