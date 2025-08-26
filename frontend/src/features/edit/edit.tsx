@@ -181,7 +181,6 @@ export default function Edit() {
       });
   }
   function runWorkflow() {
-    saveWorkflow();
     axios.post(`http://localhost:5000/api/flows/${id}/run`)
       .then(() => {
         toast.error("Workflow started successfully");
