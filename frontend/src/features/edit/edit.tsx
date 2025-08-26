@@ -367,6 +367,14 @@ export default function Edit() {
                   </DialogClose>
                   <Button
                     onClick={async () => {
+                      if (newWorkflowName.length === 0) {
+                        toast.error("Workflow name cannot be empty");
+                        return;
+                      }
+                      if (newWorkflowName.length > 25) {
+                        toast.error("Workflow name must be less than 25 characters");
+                        return;
+                      }
                       setWorkflowName(newWorkflowName);
                       setOpenChangeNameDialog(false);
                     }}>

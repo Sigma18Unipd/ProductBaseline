@@ -185,6 +185,8 @@ def new_workflow():
     name = data.get("name")
     if not name:
         return jsonify({"error": "Workflow name is required"}), 400
+    if len(name) > 25:
+        return jsonify({"error": "Workflow name must be less than 25 characters"}), 400
     new_id = str(uuid.uuid4())
     try:
         db.workflows.insert_one(
@@ -230,6 +232,8 @@ def delete_workflow(id):
 def save_workflow(id):
     data = request.get_json()
     logger.debug("Saving workflow %s with data: %s", id, data)
+    if len(data["name"]) > 25:
+        return jsonify({"error": "Workflow name must be less than 25 characters"}), 400
     flow = db.workflows.find_one({"_id": id, "email": g.email})
     if not flow:
         return jsonify({"error": "Workflow not found"}), 404
